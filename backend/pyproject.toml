@@ -1,0 +1,28 @@
+[project]
+name = "vkr-check"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi (>=0.128.0,<0.129.0)",
+    "sqlalchemy (>=2.0.45,<3.0.0)",
+    "pydantic-settings (>=2.12.0,<3.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "uvicorn (>=0.40.0,<0.41.0)"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+extend-select = ["W", "E", "I"]
+preview = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
