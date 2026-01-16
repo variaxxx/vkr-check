@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,7 @@ from src.common.filters import (
 )
 from src.common.schemas import ApiResponse
 from src.core.config import settings
+from src.core.di import container
 from src.core.health import router as health_router
 from src.modules import routers
 
@@ -28,6 +30,8 @@ async def lifespan(app: FastAPI):
     logger.info("Application stopped")
 
 
+# BaseModel.metadata.create_all(bind=engine_sync)
+
 app = FastAPI(lifespan=lifespan, default_response_class=ApiResponse)
 
 app.include_router(health_router)
@@ -44,3 +48,5 @@ app.add_middleware(
 
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
+setup_dishka(container, app)
