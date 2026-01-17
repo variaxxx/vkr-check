@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 
 from dishka import Provider, Scope, make_async_container, provide
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infra.db.session import async_session_maker
@@ -21,6 +22,10 @@ class CoreProvider(Provider):
     async def get_db_session(self) -> AsyncGenerator[AsyncSession, None]:
         async with async_session_maker() as session:
             yield session
+
+    @provide(scope=Scope.REQUEST)
+    def get_request(self) -> Request:
+        raise NotImplementedError()
 
 
 container = make_async_container(

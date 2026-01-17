@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -10,6 +10,7 @@ from src.common.schemas import FindManyResponse, TokenUserInfo
 from src.common.utils import clamp
 from src.infra.db.models import Document, DocumentStatus
 from src.infra.minio import MinioService
+from src.ml_worker import process_document
 from src.modules.user.repositories import UserRepository
 
 from .repositories import DocumentRepository
@@ -74,19 +75,10 @@ class DocumentService:
         for doc in uploaded_docs:
             await self.db.refresh(doc)
 
-            # TODO: push event to RMQ
+            # TODO: push event to celery
+            process_document.delay(doc.id)
 
-            result.append(
-                DocumentInfo(
-                    id=doc.id,
-                    created_at=doc.created_at,
-                    processed_at=None,
-                    status=DocumentStatus.UPLOADED,
-                    authors=None,
-                    result=None,
-                    original_name=doc.original_name,
-                )
-            )
+            result.append(self.to_doc_info(doc=doc))
 
         return result
 
@@ -133,33 +125,62 @@ class DocumentService:
         if doc is None or doc.user_id != user.id:
             raise HTTPException(404, "Document not found")
 
-        return DocumentInfo.model_validate(
-            {**doc.to_dict(), "authors": None, "result": None},
-        )
+        return self.to_doc_info(doc)
 
     async def get_many(
         self,
         user: TokenUserInfo,
-        offset: int = 0,
-        limit: int = 25,
+        offset: Optional[int],
+        limit: Optional[int],
+        status: Optional[DocumentStatus],
     ) -> FindManyResponse[DocumentInfo]:
-        limit = clamp(limit, 0, 50)
-        offset = max(0, offset)
+        limit = clamp(limit, 0, 50) if limit is not None else 25
+        offset = max(0, offset) if offset is not None else 0
 
         docs = await self.doc_repo.get_many(
-            limit=limit, offset=offset, user_id=user.id
+            limit=limit, offset=offset, user_id=user.id, status=status
         )
+        total = await self.doc_repo.get_total()
 
-        formatted_docs = list(
-            map(
-                lambda doc: DocumentInfo.model_validate(
-                    {**doc.to_dict(), "authors": None, "result": None},
-                ),
-                docs,
-            )
-        )
+        formatted_docs = [self.to_doc_info(doc) for doc in docs]
 
-        # TODO: total
         return FindManyResponse[DocumentInfo](
-            total=5, count=len(formatted_docs), items=formatted_docs
+            total=total, count=len(formatted_docs), items=formatted_docs
+        )
+
+    async def search(
+        self,
+        query: str,
+        user: TokenUserInfo,
+        limit: Optional[int],
+        offset: Optional[int],
+    ) -> FindManyResponse[DocumentInfo]:
+        limit = clamp(limit, 0, 50) if limit is not None else 25
+        offset = max(0, offset) if offset is not None else 0
+
+        docs = await self.doc_repo.search(
+            query=query, user_id=user.id, limit=limit, offset=offset
+        )
+
+        total = await self.doc_repo.search_total(query=query, user_id=user.id)
+        items = [self.to_doc_info(doc) for doc in docs]
+
+        return FindManyResponse[DocumentInfo](
+            total=total,
+            count=len(items),
+            items=items,
+        )
+
+    def to_doc_info(self, doc) -> DocumentInfo:
+        return DocumentInfo(
+            id=doc.id,
+            created_at=doc.created_at,
+            processed_at=doc.processed_at,
+            original_name=doc.original_name,
+            status=DocumentStatus[doc.status],
+            result=doc.result,
+            authors=[
+                f"{a['last_name']} {a['first_name']} {a['middle_name']}"
+                for a in doc.authors
+            ],
         )

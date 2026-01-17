@@ -25,10 +25,7 @@ class Settings(BaseSettings):
     KEYCLOACK_REALM: str
     KEYCLOACK_ALLOWED_ROLES: list[str] = []
 
-    RMQ_HOST: str
-    RMQ_PORT: int
-    RMQ_USER: str
-    RMQ_PASSWORD: str
+    CELERY_BROKER_URL: str
 
     DEBUG: bool = False
 

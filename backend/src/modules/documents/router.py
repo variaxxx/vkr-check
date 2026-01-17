@@ -6,6 +6,7 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import StreamingResponse
 
+from src.common.enums import DocumentStatus
 from src.common.schemas import FindManyResponse, TokenUserInfo
 
 from .schemas import DocumentInfo
@@ -16,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.post("/upload", response_model=List[DocumentInfo])
+@router.post("/upload", response_model=List[DocumentInfo], status_code=201)
 async def upload(
     document_service: FromDishka[DocumentService],
     user: FromDishka[TokenUserInfo],
@@ -31,9 +32,23 @@ async def get_documents(
     user: FromDishka[TokenUserInfo],
     offset: Optional[int] = None,
     limit: Optional[int] = None,
+    status: Optional[DocumentStatus] = None,
 ) -> FindManyResponse[DocumentInfo]:
     return await document_service.get_many(
-        offset=offset, limit=limit, user=user
+        offset=offset, limit=limit, user=user, status=status
+    )
+
+
+@router.get("/search", response_model=FindManyResponse[DocumentInfo])
+async def search_document(
+    query: str,
+    document_service: FromDishka[DocumentService],
+    user: FromDishka[TokenUserInfo],
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+) -> FindManyResponse[DocumentInfo]:
+    return await document_service.search(
+        query=query, user=user, limit=limit, offset=offset
     )
 
 
@@ -53,8 +68,3 @@ async def download_document(
     user: FromDishka[TokenUserInfo],
 ) -> StreamingResponse:
     return await document_service.download(document_id=document_id, user=user)
-
-
-# @router.get("/search")
-# async def search_document():
-#     pass

@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy import UUID, Column, DateTime, Enum, ForeignKey, String, Table
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.enums import DocumentStatus
@@ -34,6 +35,7 @@ class Document(BaseModel):
     processed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    result: Mapped[str] = mapped_column(String(length=2048), nullable=True)
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="documents")  # type: ignore # noqa: F821
@@ -51,7 +53,8 @@ class Author(BaseModel):
     )
     last_name: Mapped[str] = mapped_column(String(256))
     first_name: Mapped[str] = mapped_column(String(256))
-    middle_name: Mapped[str] = mapped_column(String(256))
+    middle_name: Mapped[str] = mapped_column(String(256), nullable=True)
+    search_vector: Mapped[str] = mapped_column(TSVECTOR)
 
     documents: Mapped[List["Document"]] = relationship(
         secondary=document_authors, back_populates="authors"
