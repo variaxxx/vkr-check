@@ -42,3 +42,6 @@ dev = [
     "alembic (>=1.18.1,<2.0.0)",
     "ruff (>=0.14.13,<0.15.0)"
 ]
+
+[tool.poetry]
+package-mode = false

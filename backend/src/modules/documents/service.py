@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -8,13 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.schemas import FindManyResponse, TokenUserInfo
 from src.common.utils import clamp
-from src.infra.db.models import Document, DocumentStatus
+from src.infra.db.models import Author, Document, DocumentStatus
 from src.infra.minio import MinioService
 from src.ml_worker import process_document
 from src.modules.user.repositories import UserRepository
 
 from .repositories import DocumentRepository
-from .schemas import DocumentInfo
+from .schemas import DocumentInfo, UploadDocumentResponse
 
 
 class DocumentService:
@@ -32,7 +32,7 @@ class DocumentService:
 
     async def upload(
         self, files: list[UploadFile], user: TokenUserInfo
-    ) -> List[DocumentInfo]:
+    ) -> UploadDocumentResponse:
         ALLOWED_FILE_TYPES = [
             # .docx
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -40,15 +40,15 @@ class DocumentService:
             "application/pdf",
         ]
         uploaded_docs = []
+        skipped_count = 0
 
         await self.user_repo.create_if_not_exists(
             sub=user.id, email=user.email, name=user.name
         )
 
         for file in files:
-            # TODO: skipped count
             if file.content_type not in ALLOWED_FILE_TYPES:
-                continue
+                skipped_count += 1
 
             object_name = f"{uuid.uuid4()}-{file.filename}"
 
@@ -71,16 +71,11 @@ class DocumentService:
 
         await self.db.commit()
 
-        result = []
         for doc in uploaded_docs:
             await self.db.refresh(doc)
-
-            # TODO: push event to celery
             process_document.delay(doc.id)
 
-            result.append(self.to_doc_info(doc=doc))
-
-        return result
+        return UploadDocumentResponse(skipped_count=skipped_count)
 
     async def download(
         self,
@@ -125,7 +120,7 @@ class DocumentService:
         if doc is None or doc.user_id != user.id:
             raise HTTPException(404, "Document not found")
 
-        return self.to_doc_info(doc)
+        return self._to_doc_info(doc)
 
     async def get_many(
         self,
@@ -142,7 +137,7 @@ class DocumentService:
         )
         total = await self.doc_repo.get_total()
 
-        formatted_docs = [self.to_doc_info(doc) for doc in docs]
+        formatted_docs = [self._to_doc_info(doc) for doc in docs]
 
         return FindManyResponse[DocumentInfo](
             total=total, count=len(formatted_docs), items=formatted_docs
@@ -155,6 +150,9 @@ class DocumentService:
         limit: Optional[int],
         offset: Optional[int],
     ) -> FindManyResponse[DocumentInfo]:
+        if not len(query):
+            raise HTTPException(401, "Empty query provided")
+
         limit = clamp(limit, 0, 50) if limit is not None else 25
         offset = max(0, offset) if offset is not None else 0
 
@@ -163,7 +161,7 @@ class DocumentService:
         )
 
         total = await self.doc_repo.search_total(query=query, user_id=user.id)
-        items = [self.to_doc_info(doc) for doc in docs]
+        items = [self._to_doc_info(doc) for doc in docs]
 
         return FindManyResponse[DocumentInfo](
             total=total,
@@ -171,16 +169,22 @@ class DocumentService:
             items=items,
         )
 
-    def to_doc_info(self, doc) -> DocumentInfo:
+    def _to_doc_info(self, doc) -> DocumentInfo:
         return DocumentInfo(
             id=doc.id,
             created_at=doc.created_at,
             processed_at=doc.processed_at,
             original_name=doc.original_name,
-            status=DocumentStatus[doc.status],
+            status=DocumentStatus[doc.status]
+            if isinstance(doc.status, str)
+            else doc.status,
             result=doc.result,
             authors=[
-                f"{a['last_name']} {a['first_name']} {a['middle_name']}"
+                f"{a.last_name} {a.first_name} {a.middle_name}"
+                if isinstance(a, Author)
+                else f"{a['last_name']} {a['first_name']} {a['middle_name']}"
                 for a in doc.authors
-            ],
+            ]
+            if doc.authors
+            else None,
         )

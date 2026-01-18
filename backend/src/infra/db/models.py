@@ -35,7 +35,7 @@ class Document(BaseModel):
     processed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    result: Mapped[str] = mapped_column(String(length=2048), nullable=True)
+    result: Mapped[str] = mapped_column(String(), nullable=True)
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="documents")  # type: ignore # noqa: F821

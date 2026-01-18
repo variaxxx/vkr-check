@@ -1,15 +1,15 @@
 import uuid
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
 from src.common.enums import DocumentStatus
 from src.common.schemas import FindManyResponse, TokenUserInfo
 
-from .schemas import DocumentInfo
+from .schemas import DocumentInfo, UploadDocumentResponse
 from .service import DocumentService
 
 router = APIRouter(
@@ -17,12 +17,15 @@ router = APIRouter(
 )
 
 
-@router.post("/upload", response_model=List[DocumentInfo], status_code=201)
+@router.post("/upload", response_model=UploadDocumentResponse, status_code=201)
 async def upload(
     document_service: FromDishka[DocumentService],
     user: FromDishka[TokenUserInfo],
     files: Annotated[list[UploadFile], File(...)],
-) -> List[DocumentInfo]:
+) -> UploadDocumentResponse:
+    if not files:
+        raise HTTPException(401, "No files provided")
+
     return await document_service.upload(files=files, user=user)
 
 

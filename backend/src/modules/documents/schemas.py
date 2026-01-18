@@ -15,3 +15,7 @@ class DocumentInfo(BaseModel):
     status: DocumentStatus
     authors: Optional[List[str]]
     result: Optional[str]
+
+
+class UploadDocumentResponse(BaseModel):
+    skipped_count: int
