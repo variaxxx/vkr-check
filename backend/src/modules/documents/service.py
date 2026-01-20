@@ -132,7 +132,7 @@ class DocumentService:
         docs = await self.doc_repo.get_many(
             limit=limit, offset=offset, user_id=user.id, status=status
         )
-        total = await self.doc_repo.get_total()
+        total = await self.doc_repo.get_total(user_id=user.id, status=status)
 
         formatted_docs = [self._to_doc_info(doc) for doc in docs]
 
