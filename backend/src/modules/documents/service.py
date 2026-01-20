@@ -11,22 +11,19 @@ from src.common.utils import clamp
 from src.infra.db.models import Author, Document, DocumentStatus
 from src.infra.minio import MinioService
 from src.ml_worker import process_document
-from src.modules.user.repositories import UserRepository
 
 from .repositories import DocumentRepository
-from .schemas import DocumentInfo, UploadDocumentResponse
+from .schemas import DocumentInfoResponse, UploadDocumentResponse
 
 
 class DocumentService:
     def __init__(
         self,
         doc_repo: DocumentRepository,
-        user_repo: UserRepository,
         minio: MinioService,
         db: AsyncSession,
     ):
         self.doc_repo = doc_repo
-        self.user_repo = user_repo
         self.minio = minio
         self.db = db
 
@@ -42,10 +39,6 @@ class DocumentService:
         uploaded_docs = []
         skipped_count = 0
         skipped_files = []
-
-        await self.user_repo.create_if_not_exists(
-            sub=user.id, email=user.email, name=user.name
-        )
 
         for file in files:
             if file.content_type not in ALLOWED_FILE_TYPES:
@@ -118,7 +111,7 @@ class DocumentService:
         self,
         document_id: uuid.UUID | str,
         user: TokenUserInfo,
-    ) -> DocumentInfo:
+    ) -> DocumentInfoResponse:
         doc = await self.doc_repo.get_by_id(id=document_id)
 
         if doc is None or doc.user_id != user.id:
@@ -132,7 +125,7 @@ class DocumentService:
         offset: Optional[int],
         limit: Optional[int],
         status: Optional[DocumentStatus],
-    ) -> FindManyResponse[DocumentInfo]:
+    ) -> FindManyResponse[DocumentInfoResponse]:
         limit = clamp(limit, 0, 50) if limit is not None else 25
         offset = max(0, offset) if offset is not None else 0
 
@@ -143,7 +136,7 @@ class DocumentService:
 
         formatted_docs = [self._to_doc_info(doc) for doc in docs]
 
-        return FindManyResponse[DocumentInfo](
+        return FindManyResponse[DocumentInfoResponse](
             total=total, count=len(formatted_docs), items=formatted_docs
         )
 
@@ -153,7 +146,7 @@ class DocumentService:
         user: TokenUserInfo,
         limit: Optional[int],
         offset: Optional[int],
-    ) -> FindManyResponse[DocumentInfo]:
+    ) -> FindManyResponse[DocumentInfoResponse]:
         if not len(query):
             raise HTTPException(401, "Empty query provided")
 
@@ -167,14 +160,14 @@ class DocumentService:
         total = await self.doc_repo.search_total(query=query, user_id=user.id)
         items = [self._to_doc_info(doc) for doc in docs]
 
-        return FindManyResponse[DocumentInfo](
+        return FindManyResponse[DocumentInfoResponse](
             total=total,
             count=len(items),
             items=items,
         )
 
-    def _to_doc_info(self, doc) -> DocumentInfo:
-        return DocumentInfo(
+    def _to_doc_info(self, doc) -> DocumentInfoResponse:
+        return DocumentInfoResponse(
             id=doc.id,
             created_at=doc.created_at,
             processed_at=doc.processed_at,

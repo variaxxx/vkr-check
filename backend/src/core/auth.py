@@ -1,22 +1,14 @@
 from dishka import FromDishka, Provider, Scope, provide
-from fastapi import HTTPException, Request
+from fastapi import Request
 
-from src.common.schemas.token_user_info import TokenUserInfo
-from src.modules.user.service import UserService
+from src.common.schemas import TokenUserInfo
+from src.modules.auth.service import AuthService
 
 
-class AuthProvider(Provider):
+class AuthGuardProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_current_user(
-        self, request: Request, user_service: FromDishka[UserService]
+        self, request: Request, auth_service: FromDishka[AuthService]
     ) -> TokenUserInfo:
-        header = request.headers.get("authorization")
-        if not header or not header.startswith("Bearer "):
-            raise HTTPException(401, "Unauthorized")
-
-        token = header.split()[1]
-        token_payload = await user_service.validate_access_token(token=token)
-        if token_payload is None:
-            raise HTTPException(401, "Unauthorized")
-
-        return token_payload
+        token = request.cookies.get("access_token")
+        return auth_service.decode_jwt_token(token=token)

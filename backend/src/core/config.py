@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,7 +29,15 @@ class Settings(BaseSettings):
 
     CELERY_BROKER_URL: str
 
+    JWT_ACCESS_SECRET: str
+    JWT_REFRESH_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 1
+
     DEBUG: bool = False
+    ENV: Literal["prod", "dev"] = "dev"
 
 
 settings = Settings()

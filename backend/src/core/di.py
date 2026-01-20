@@ -6,10 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infra.db.session import async_session_maker
 from src.infra.minio import MinioProvider
+from src.modules.auth.providers import AuthProvider
 from src.modules.documents.providers import DocumentProvider
 from src.modules.user.providers import UserProvider
 
-from .auth import AuthProvider
+from .auth import AuthGuardProvider
 from .config import Settings, settings
 
 
@@ -30,8 +31,9 @@ class CoreProvider(Provider):
 
 container = make_async_container(
     CoreProvider(),
-    AuthProvider(),
+    AuthGuardProvider(),
     UserProvider(),
     DocumentProvider(),
     MinioProvider(),
+    AuthProvider(),
 )
