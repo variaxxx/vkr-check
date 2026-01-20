@@ -1,3 +1,3 @@
-from src.modules.auth.router import router as auth_router
+from .documents.router import router as documents_router
 
-routers = [auth_router]
+routers = [documents_router]
