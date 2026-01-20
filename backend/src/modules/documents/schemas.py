@@ -19,3 +19,4 @@ class DocumentInfo(BaseModel):
 
 class UploadDocumentResponse(BaseModel):
     skipped_count: int
+    skipped_files: List[str]

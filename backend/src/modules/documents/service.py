@@ -41,6 +41,7 @@ class DocumentService:
         ]
         uploaded_docs = []
         skipped_count = 0
+        skipped_files = []
 
         await self.user_repo.create_if_not_exists(
             sub=user.id, email=user.email, name=user.name
@@ -49,6 +50,7 @@ class DocumentService:
         for file in files:
             if file.content_type not in ALLOWED_FILE_TYPES:
                 skipped_count += 1
+                skipped_files.append(file.filename)
 
             object_name = f"{uuid.uuid4()}-{file.filename}"
 
@@ -75,7 +77,9 @@ class DocumentService:
             await self.db.refresh(doc)
             process_document.delay(doc.id)
 
-        return UploadDocumentResponse(skipped_count=skipped_count)
+        return UploadDocumentResponse(
+            skipped_count=skipped_count, skipped_files=skipped_files
+        )
 
     async def download(
         self,
