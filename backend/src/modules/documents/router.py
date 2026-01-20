@@ -29,7 +29,7 @@ async def upload(
     return await document_service.upload(files=files, user=user)
 
 
-@router.get("/", response_model=FindManyResponse[DocumentInfo])
+@router.get("", response_model=FindManyResponse[DocumentInfo])
 async def get_documents(
     document_service: FromDishka[DocumentService],
     user: FromDishka[TokenUserInfo],

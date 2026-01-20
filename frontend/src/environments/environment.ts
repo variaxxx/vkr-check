@@ -1,3 +1,7 @@
 export const env = {
-  BASE_API_URL: "http://localhost:8000/",
+  HOST: "http://localhost:4200/",
+  API_BASE_URL: "http://localhost:8000/",
+  KEYCLOAK_BASE_URL: "http://localhost:8155/",
+  KEYCLOAK_REALM: "LOCAL",
+  KEYCLOAK_CLIENT_ID: "spa-client",
 } as const;
