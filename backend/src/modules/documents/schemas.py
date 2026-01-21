@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from ...infra.db.models import DocumentStatus
 
 
-class DocumentInfo(BaseModel):
+class DocumentInfoResponse(BaseModel):
     id: uuid.UUID
     created_at: datetime
     processed_at: Optional[datetime]

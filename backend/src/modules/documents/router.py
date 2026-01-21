@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 from src.common.enums import DocumentStatus
 from src.common.schemas import FindManyResponse, TokenUserInfo
 
-from .schemas import DocumentInfo, UploadDocumentResponse
+from .schemas import DocumentInfoResponse, UploadDocumentResponse
 from .service import DocumentService
 
 router = APIRouter(
@@ -29,38 +29,38 @@ async def upload(
     return await document_service.upload(files=files, user=user)
 
 
-@router.get("", response_model=FindManyResponse[DocumentInfo])
+@router.get("", response_model=FindManyResponse[DocumentInfoResponse])
 async def get_documents(
     document_service: FromDishka[DocumentService],
     user: FromDishka[TokenUserInfo],
     offset: Optional[int] = None,
     limit: Optional[int] = None,
     status: Optional[DocumentStatus] = None,
-) -> FindManyResponse[DocumentInfo]:
+) -> FindManyResponse[DocumentInfoResponse]:
     return await document_service.get_many(
         offset=offset, limit=limit, user=user, status=status
     )
 
 
-@router.get("/search", response_model=FindManyResponse[DocumentInfo])
+@router.get("/search", response_model=FindManyResponse[DocumentInfoResponse])
 async def search_document(
     query: str,
     document_service: FromDishka[DocumentService],
     user: FromDishka[TokenUserInfo],
     limit: Optional[int] = None,
     offset: Optional[int] = None,
-) -> FindManyResponse[DocumentInfo]:
+) -> FindManyResponse[DocumentInfoResponse]:
     return await document_service.search(
         query=query, user=user, limit=limit, offset=offset
     )
 
 
-@router.get("/{document_id}", response_model=DocumentInfo)
+@router.get("/{document_id}", response_model=DocumentInfoResponse)
 async def get_document_by_id(
     document_id: str,
     document_service: FromDishka[DocumentService],
     user: FromDishka[TokenUserInfo],
-) -> DocumentInfo:
+) -> DocumentInfoResponse:
     return await document_service.get_by_id(document_id=document_id, user=user)
 
 

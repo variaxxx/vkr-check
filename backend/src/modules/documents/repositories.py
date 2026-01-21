@@ -79,7 +79,7 @@ class DocumentRepository:
         query = select(func.count()).select_from(Document)
 
         if where:
-            query.where(and_(*where))
+            query = query.where(and_(*where))
 
         result = await self.db.execute(query)
         return result.scalar_one()

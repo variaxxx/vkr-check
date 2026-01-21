@@ -28,9 +28,9 @@ class UserRepository:
         return result.scalars().one_or_none()
 
     async def create_if_not_exists(
-        self, sub: uuid.UUID | str, email: str, name: str
+        self, user_id: uuid.UUID | str, email: str, name: str
     ) -> User:
-        user_id = normalize_uuid(sub)
+        user_id = normalize_uuid(user_id)
 
         select_user_query = select(User).where(User.id == user_id)
         result = await self.db.execute(select_user_query)
