@@ -30,7 +30,11 @@ class AuthService:
             header = jwt.get_unverified_header(token)
             kid = header["kid"]
             jwks = self.get_jwks()
-            key = next(k for k in jwks["keys"] if k["kid"] == kid)
+
+            key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+            if key is None:
+                raise HTTPException(401, "Invalid token")
+
             payload = jwt.decode(
                 token, key, algorithms=["RS256"], audience="account"
             )
