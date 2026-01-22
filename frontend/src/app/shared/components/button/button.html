@@ -1,0 +1,19 @@
+<button
+  [attr.data-priority]="priority()"
+  [attr.data-size]="size()"
+  [type]="type()"
+  class="
+    w-full
+    cursor-pointer
+    transition
+    font-bold
+    border-2
+    outline-transparent
+    focus:border-2
+    focus:outline-2
+    rounded-md
+    select-none
+  "
+  >
+  <ng-content></ng-content>
+</button>
