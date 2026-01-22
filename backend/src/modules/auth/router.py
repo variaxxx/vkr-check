@@ -39,6 +39,11 @@ def refresh(
     return AccessTokenResponse(access_token=access_token)
 
 
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("refresh_token", path="/")
+
+
 def set_token_cookie(
     response: Response, token_type: Literal["access", "refresh"], value: str
 ):
