@@ -1,4 +1,4 @@
-import { iconsConfig } from "../../../app.icons";
+import { IconName } from "../../../app.icons";
 import { IconService } from "./icon.service";
 import { booleanAttribute, ChangeDetectionStrategy, Component, inject, input } from "@angular/core";
 import { SafeHtml } from "@angular/platform-browser";
@@ -17,7 +17,7 @@ import { SafeHtml } from "@angular/platform-browser";
 export class Icon {
   private readonly iconService = inject(IconService);
 
-  icon = input.required<typeof iconsConfig.icons[number]>();
+  icon = input.required<IconName>();
   filled = input(false, { transform: booleanAttribute });
 
   get inner(): SafeHtml {

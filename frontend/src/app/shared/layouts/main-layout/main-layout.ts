@@ -1,12 +1,17 @@
+import { Header } from "../../components/header/header";
+import { Navbar } from "../../components/navbar/navbar";
 import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 
 @Component({
   selector: "app-main-layout",
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, Header, Navbar],
   templateUrl: "./main-layout.html",
   styleUrl: "./main-layout.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // host: {
+  //   class: "h-full",
+  // },
 })
 export class MainLayout {
 

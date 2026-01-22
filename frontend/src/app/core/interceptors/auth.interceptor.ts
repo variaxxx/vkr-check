@@ -3,7 +3,7 @@ import { AuthService } from "../services";
 import { HttpEvent, HttpHandlerFn, HttpRequest } from "@angular/common/http";
 import { inject } from "@angular/core";
 import { Router } from "@angular/router";
-import { BehaviorSubject, catchError, filter, Observable, switchMap, throwError } from "rxjs";
+import { BehaviorSubject, catchError, filter, Observable, switchMap, tap, throwError } from "rxjs";
 
 const isRefreshing$ = new BehaviorSubject<boolean>(false);
 
@@ -56,8 +56,11 @@ function addToken(req: HttpRequest<any>, token: string): HttpRequest<any> {
 
 function handleFailedRefresh(authService: AuthService, err: any): Observable<any> {
   if (err.status === 401) {
-    authService.logout();
-    inject(Router).navigateByUrl("/auth");
+    return authService.logout().pipe(
+      tap(() => {
+        inject(Router).navigateByUrl("/auth");
+      }),
+    );
   }
 
   isRefreshing$.next(false);

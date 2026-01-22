@@ -1,5 +1,5 @@
 import { env } from "../../../environments/environment";
-import { AccessTokenResponse } from "../../features/auth/dto";
+import { AccessTokenResponse, UserInfoResponse } from "../../features/auth/dto";
 import { randomString } from "../../shared/utils";
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
@@ -11,6 +11,7 @@ import { BehaviorSubject, catchError, map, Observable, of, tap } from "rxjs";
 export class AuthService {
   private _token?: string;
   private _isLoggedIn$ = new BehaviorSubject<boolean | null>(null);
+  private _me$ = new BehaviorSubject<UserInfoResponse | null>(null);
 
   private readonly http = inject(HttpClient);
 
@@ -27,9 +28,18 @@ export class AuthService {
     );
   }
 
-  public logout(): void {
-    this._token = undefined;
-    this._isLoggedIn$.next(false);
+  public logout(): Observable<null> {
+    return this.http.post<null>(
+      `${env.API_BASE_URL}auth/logout`,
+      {},
+      { withCredentials: true },
+    ).pipe(
+      tap(() => {
+        this._token = undefined;
+        this._isLoggedIn$.next(false);
+        this._me$.next(null);
+      }),
+    );
   }
 
   public refreshToken(): Observable<AccessTokenResponse> {
@@ -43,6 +53,19 @@ export class AuthService {
         this._isLoggedIn$.next(true);
       }),
     );
+  }
+
+  public getMe$(): Observable<UserInfoResponse> {
+    if (this._me$.value === null) {
+      return this.http.get<UserInfoResponse>(
+        `${env.API_BASE_URL}user/me`,
+      ).pipe(
+        tap((res) => {
+          this._me$.next(res);
+        }),
+      );
+    }
+    return of(this._me$.value);
   }
 
   public isLoggedIn$(): Observable<boolean> {

@@ -1,1 +1,9 @@
-<router-outlet></router-outlet>
+<div class="min-h-screen w-full flex">
+  <app-navbar class="shrink-0"></app-navbar>
+  <div class="flex flex-col flex-1 min-w-0">
+    <app-header class="sticky top-0 shrink-0"></app-header>
+    <div class="flex-1 px-6 py-8 min-w-0 overflow-x-scroll">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
