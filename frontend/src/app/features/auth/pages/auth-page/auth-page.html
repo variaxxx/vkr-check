@@ -1,3 +1,13 @@
-<p>auth-page works!</p>
+<div class="min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white max-w-md p-8 rounded-2xl shadow-lg">
+    <div class="flex flex-col items-center mb-8">
+      <app-icon icon="logo" class="w-20 h-20 mb-4 text-transparent"></app-icon>
 
-<a [href]="authLink">Login</a>
+      <h1 class="text-2xl font-bold text-gray-900 text-center">Сервис проверки ВКР <br> по норме контроля ГИА</h1>
+    </div>
+
+    <app-button (click)="login()" type="button" priority="primary" size="md" class="mb-4">Авторизоваться через МИЭМ</app-button>
+    <p class="text-gray-500 text-center text-xs">Для доступа к сервису используйте учетную запись МИЭМ</p>
+  </div>
+</div>
+

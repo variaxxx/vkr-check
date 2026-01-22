@@ -1,4 +1,4 @@
-import { AuthService } from "../../features/auth/auth.service";
+import { AuthService } from "../services";
 import { inject } from "@angular/core";
 import {
   ActivatedRouteSnapshot,
@@ -6,6 +6,7 @@ import {
   Router,
   RouterStateSnapshot,
 } from "@angular/router";
+import { map } from "rxjs";
 
 export const IsLoggedInGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
@@ -14,7 +15,11 @@ export const IsLoggedInGuard: CanActivateFn = (
   const router = inject(Router);
   const auth = inject(AuthService);
 
-  if (!auth.isLoggedIn())
-    return router.parseUrl("/auth");
-  return true;
+  return auth.isLoggedIn$().pipe(
+    map((val) => {
+      if (!val)
+        return router.parseUrl("/auth");
+      return true;
+    }),
+  );
 };

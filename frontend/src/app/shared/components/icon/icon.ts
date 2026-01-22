@@ -1,4 +1,5 @@
-import { iconsConfig, IconService } from "./icon.service";
+import { iconsConfig } from "../../../app.icons";
+import { IconService } from "./icon.service";
 import { booleanAttribute, ChangeDetectionStrategy, Component, inject, input } from "@angular/core";
 import { SafeHtml } from "@angular/platform-browser";
 

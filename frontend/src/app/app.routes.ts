@@ -1,4 +1,4 @@
-import { IsLoggedInGuard } from "./core/guards/auth.guard";
+import { IsLoggedInGuard } from "./core/guards/is-logged-in.guard";
 import { Routes } from "@angular/router";
 
 export const routes: Routes = [
