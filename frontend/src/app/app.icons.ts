@@ -5,6 +5,13 @@ export const iconsConfig = {
     "upload",
     "history",
     "user",
+    "log-out",
+    "document",
+    "x",
+    "file-x",
+    "alert-circle",
+    "check-circle",
+    "clock",
   ] as const,
 };
 

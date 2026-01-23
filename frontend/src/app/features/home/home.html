@@ -1,1 +1,21 @@
-{{ documents$ | async | json }}
+<div class="flex flex-col">
+  <h1 class="text-2xl font-bold mb-2 text-neutral-900">Загрузка работ</h1>
+  <span class="text-md text-neutral-500 mb-8">Загрузите файлы ВКР для автоматической проверки на соответствие теме и критериям</span>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    class="mb-8 flex flex-col gap-4"
+    >
+    <app-files-input formControlName="files"></app-files-input>
+    <app-files-list
+      [control]="form.controls.files"
+      [style.display]="!form.controls.files.value.length ? 'none' : 'block'"
+      [isUploading]="isUploading()"
+      [uploadingProgress]="uploadingProgress()"
+      (submit)="submit()"
+      ></app-files-list>
+  </form>
+
+  <app-recent-docs-list></app-recent-docs-list>
+</div>
