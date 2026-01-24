@@ -40,12 +40,15 @@ export class Home {
     ).subscribe({
       next: (event) => {
         this.uploadingProgress.set(event.progress);
+
         if (event.done) {
           this.uploadingProgress.set(0);
           this.isUploading.set(false);
-          this.notificationService.success("Документы успешно загружены");
           this.form.controls.files.setValue([]);
-          // TODO: update recent docs
+
+          this.notificationService.success("Документы успешно загружены");
+
+          this.docsService.refreshDocuments();
         }
       },
       error: (err) => {

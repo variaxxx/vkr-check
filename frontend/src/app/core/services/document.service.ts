@@ -1,9 +1,10 @@
 import { env } from "../../../environments/environment";
+import { DocumentInfoResponse } from "../../features/documents/dto";
 import { DocumentStatus } from "../../shared/enums";
 import { FindManyApiReponse } from "../interfaces";
-import { HttpClient, HttpEventType } from "@angular/common/http";
+import { HttpClient, HttpEventType, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { map, Observable } from "rxjs";
+import { map, Observable, startWith, Subject, switchMap } from "rxjs";
 
 export interface UploadingProgress {
   progress: number;
@@ -16,7 +17,22 @@ export interface UploadingProgress {
 export class DocumentService {
   private readonly http = inject(HttpClient);
 
-  upload(docs: File[]): Observable<UploadingProgress> {
+  private refresh$ = new Subject<void>();
+
+  public refreshDocuments(): void {
+    this.refresh$.next();
+  }
+
+  public getRecent(
+    limit: number = 5,
+  ): Observable<FindManyApiReponse<DocumentInfoResponse>> {
+    return this.refresh$.pipe(
+      startWith(void 0),
+      switchMap(() => this.getMany({ limit })),
+    );
+  }
+
+  public upload(docs: File[]): Observable<UploadingProgress> {
     const fd = new FormData();
 
     for (const file of docs) {
@@ -49,24 +65,26 @@ export class DocumentService {
     );
   }
 
-  getMany(
-    limit: number,
-    offset: number,
-    status?: DocumentStatus,
-  ): Observable<FindManyApiReponse> {
-    const params: any = {
-      limit,
-      offset,
-    };
+  public getMany(
+    options: {
+      limit?: number;
+      offset?: number;
+      status?: DocumentStatus;
+    },
+  ): Observable<FindManyApiReponse<DocumentInfoResponse>> {
+    const { limit, offset, status } = options;
 
-    if (status)
-      params.status = status;
-
-    return this.http.get<FindManyApiReponse>(
-      `${env.API_BASE_URL}documents`,
-      {
-        params,
+    const params = new HttpParams({
+      fromObject: {
+        limit: limit ?? 25,
+        offset: offset ?? 0,
+        ...(status && { status }),
       },
+    });
+
+    return this.http.get<FindManyApiReponse<DocumentInfoResponse>>(
+      `${env.API_BASE_URL}documents`,
+      { params },
     );
   }
 }

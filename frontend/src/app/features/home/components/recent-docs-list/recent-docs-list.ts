@@ -15,5 +15,5 @@ import { RouterLink } from "@angular/router";
 export class RecentDocsList {
   private readonly docService = inject(DocumentService);
 
-  recentDocuments$ = this.docService.getMany(5, 0);
+  protected recentDocuments$ = this.docService.getRecent();
 }
