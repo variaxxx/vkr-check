@@ -1,0 +1,58 @@
+<div
+  class="border-dashed border-2 rounded-xl h-full w-full transition-colors cursor-pointer"
+  [ngClass]="{
+    'bg-white border-neutral-200 hover:bg-neutral-100 hover:border-neutral-300 ': !isDraggedOver(),
+    'bg-blue-100 border-blue-600': isDraggedOver(),
+  }"
+  (drop)="onFileDrop($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (click)="triggerFileSelect()"
+  >
+  @if (!files().length) {
+    <div
+      class="flex justify-center items-center flex-col p-12 pointer-events-none"
+    >
+      <app-icon
+        [icon]="isDraggedOver() ? 'document' : 'upload'"
+        class="w-12 h-12 mb-3"
+        [ngClass]="{
+          'text-neutral-400': !isDraggedOver(),
+          'text-blue-600': isDraggedOver(),
+        }"
+        ></app-icon>
+      <span class="font-medium text-neutral-900 mb-2 text-xl text-center">
+        @if (!isDraggedOver()) {
+          Перенесите файлы сюда или нажмите для выбора
+        } @else {
+          Отпустите файлы для загрузки
+        }
+      </span>
+      <span class="text-neutral-500 mb-2 text-sm text-center">Поддерживаемые форматы: .pdf, .docx</span>
+      <app-button size="sm" class="mt-5">
+        Выбрать файлы
+      </app-button>
+    </div>
+  } @else {
+    <div
+      class="flex justify-center items-center gap-3 p-4 pointer-events-none"
+    >
+      <app-icon
+        [icon]="isDraggedOver() ? 'document' : 'upload'"
+        class="w-5 h-5"
+        [ngClass]="{
+          'text-neutral-400': !isDraggedOver(),
+          'text-blue-600': isDraggedOver(),
+        }"
+        ></app-icon>
+      <span class="font-medium text-neutral-900">
+        @if (!isDraggedOver()) {
+          Добавить документы
+        } @else {
+          Отпустите файлы для загрузки
+        }
+      </span>
+    </div>
+  }
+  <input type="file" class="hidden" (change)="onFileChange($event)" multiple accept=".pdf,.docx" #fileInput>
+</div>

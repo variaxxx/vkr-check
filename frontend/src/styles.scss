@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "colors";
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  background-color: var(--color-neutral-100);
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .styled-scrollbar {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: auto transparent;
+  }
+}
+
+:root {
+	--default-transition: 0.1s ease-in-out;
+  --default-transition-duration: 0.1s;
+}
+

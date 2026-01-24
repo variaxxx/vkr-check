@@ -1,0 +1,23 @@
+<div class="bg-white rounded-xl border-2 border-neutral-200 overflow-hidden">
+  <div class="px-6 py-4 border-b border-neutral-200">
+    <h2 class="font-medium text-lg text-neutral-900">Недавно загруженные документы</h2>
+  </div>
+
+  @if (recentDocuments$ | async; as docs) {
+    @if (docs.count) {
+      @for (doc of docs.items; track $index) {
+        <app-recent-docs-list-item
+          [doc]="doc"
+          class="border-neutral-200 hover:bg-neutral-100 transition-colors cursor-pointer"
+          [class.border-b]="$index != docs.items.length - 1"
+          [routerLink]="['docs', doc.id]"
+          ></app-recent-docs-list-item>
+      }
+    } @else {
+      <div class="px-6 py-8 flex items-center justify-center text-neutral-500 gap-2">
+        <app-icon icon="file-x" class="w-5 h-5"></app-icon>
+        Вы еще не загружали документов
+      </div>
+    }
+  }
+</div>

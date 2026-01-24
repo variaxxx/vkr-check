@@ -1,0 +1,12 @@
+:host {
+  display: block;
+
+  .active-route {
+    background-color: var(--color-blue-600);
+    color: var(--color-white);
+
+    app-icon {
+      color: var(--color-white);
+    }
+  }
+}

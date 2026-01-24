@@ -1,0 +1,24 @@
+<button
+  [attr.data-priority]="priority()"
+  [attr.data-size]="size()"
+  [type]="type()"
+  class="
+    w-full
+    cursor-pointer
+    transition
+    font-medium
+    border-2
+    outline-transparent
+    focus:border-2
+    focus:outline-2
+    rounded-lg
+    select-none
+    flex
+    items-center
+    justify-center
+    gap-2
+  "
+  [disabled]="disabled()"
+  >
+  <ng-content></ng-content>
+</button>

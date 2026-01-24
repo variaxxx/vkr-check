@@ -1,0 +1,13 @@
+<div class="px-6 py-4 border-b border-neutral-200 flex justify-between items-center bg-white hover:bg-neutral-100 transition-colors">
+  <div class="flex gap-3">
+    <app-icon icon="document" class="text-blue-600 w-10 h-10"></app-icon>
+    <div class="min-w-0">
+      <p class="font-medium text-neutral-900 text-sm">{{ file().name }}</p>
+      <p class="text-neutral-500 text-xs">{{ file().size | fileSize }}</p>
+    </div>
+  </div>
+
+  <button (click)="remove()" class="w-6 h-6 text-neutral-500 hover:text-red-500 cursor-pointer" type="button">
+    <app-icon icon="x" class="w-6 h-6"></app-icon>
+  </button>
+</div>

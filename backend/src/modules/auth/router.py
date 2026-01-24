@@ -6,13 +6,13 @@ from fastapi import APIRouter, HTTPException, Request, Response
 
 from src.core.config import settings
 
-from .schemas import KCAuthRequest
+from .schemas import AccessTokenResponse, KCAuthRequest
 from .service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Auth"], route_class=DishkaRoute)
 
 
-@router.post("/kc")
+@router.post("/kc", response_model=AccessTokenResponse)
 async def kc_auth(
     body: KCAuthRequest,
     auth_service: FromDishka[AuthService],
@@ -20,14 +20,12 @@ async def kc_auth(
 ):
     tokens = await auth_service.login(token=body.token)
     set_token_cookie(
-        response=response, token_type="access", value=tokens.access_token
-    )
-    set_token_cookie(
         response=response, token_type="refresh", value=tokens.refresh_token
     )
+    return AccessTokenResponse(access_token=tokens.access_token)
 
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=AccessTokenResponse)
 def refresh(
     request: Request,
     response: Response,
@@ -38,7 +36,12 @@ def refresh(
         raise HTTPException(401, "No token provided")
 
     access_token = auth_service.refresh_token(refresh_token=refresh_token)
-    set_token_cookie(response=response, token_type="access", value=access_token)
+    return AccessTokenResponse(access_token=access_token)
+
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("refresh_token", path="/")
 
 
 def set_token_cookie(

@@ -15,6 +15,10 @@ class TokensResponse(BaseModel):
     refresh_token: str
 
 
+class AccessTokenResponse(BaseModel):
+    access_token: str
+
+
 class TokenPayload(TypedDict):
     user: TokenUserInfo
     iat: datetime
