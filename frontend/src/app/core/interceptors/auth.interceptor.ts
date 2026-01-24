@@ -1,5 +1,5 @@
 import { env } from "../../../environments/environment";
-import { AuthService } from "../services";
+import { AuthService, NotificationService } from "../services";
 import { HttpEvent, HttpHandlerFn, HttpRequest } from "@angular/common/http";
 import { inject } from "@angular/core";
 import { Router } from "@angular/router";
@@ -9,10 +9,24 @@ const isRefreshing$ = new BehaviorSubject<boolean>(false);
 
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<any>> {
   const authService = inject(AuthService);
+  const notificationService = inject(NotificationService);
   const token = authService.token;
 
-  if (!token)
-    return next(req);
+  if (!token) {
+    return next(req).pipe(
+      catchError((err) => {
+        if (err.status === 0) {
+          notificationService.error("В данный момент сервер недоступен");
+        } else if (err.status === 403) {
+          notificationService.error("У Вас нет доступа");
+        } else {
+          notificationService.error("Что-то пошло не так");
+        }
+
+        return throwError(() => err);
+      }),
+    );
+  }
 
   return next(addToken(req, token)).pipe(
     catchError((err) => {
@@ -20,6 +34,14 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
         if (req.url.startsWith(env.API_BASE_URL) && req.url.includes("refresh"))
           return handleFailedRefresh(authService, err);
         return refreshAndProceed(authService, req, next);
+      }
+
+      if (err.status === 0) {
+        notificationService.error("В данный момент сервер недоступен");
+      } else if (err.status === 403) {
+        notificationService.error("У Вас нет доступа");
+      } else {
+        notificationService.error("Что-то пошло не так");
       }
 
       return throwError(() => err);
