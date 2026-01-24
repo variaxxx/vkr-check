@@ -12,6 +12,8 @@ export const iconsConfig = {
     "alert-circle",
     "check-circle",
     "clock",
+    "alert-triangle",
+    "info",
   ] as const,
 };
 

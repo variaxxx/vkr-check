@@ -1,4 +1,4 @@
-import { DocumentService } from "../../core/services";
+import { DocumentService, NotificationService } from "../../core/services";
 import { FilesInput } from "./components/files-input/files-input";
 import { FilesList } from "./components/files-list/files-list";
 import { RecentDocsList } from "./components/recent-docs-list/recent-docs-list";
@@ -21,6 +21,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from "@angular/forms";
 export class Home {
   private readonly docsService = inject(DocumentService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notificationService = inject(NotificationService);
 
   form = new FormGroup({
     files: new FormControl<File[]>([], { nonNullable: true }),
@@ -31,8 +32,7 @@ export class Home {
 
   submit(): void {
     if (this.isUploading())
-      // TODO: notification
-      return;
+      return this.notificationService.warn("Вы уже загружаете документы");
 
     this.isUploading.set(true);
     this.docsService.upload(this.form.controls.files.value).pipe(
@@ -43,12 +43,13 @@ export class Home {
         if (event.done) {
           this.uploadingProgress.set(0);
           this.isUploading.set(false);
-          setTimeout(() => this.form.controls.files.setValue([]), 1000);
+          this.notificationService.success("Документы успешно загружены");
+          this.form.controls.files.setValue([]);
           // TODO: update recent docs
         }
       },
       error: (err) => {
-        // TODO: notification
+        this.notificationService.error("Что-то пошло не так при загрузке документов");
         console.error(err);
       },
     });

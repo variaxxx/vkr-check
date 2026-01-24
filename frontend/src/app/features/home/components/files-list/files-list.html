@@ -19,12 +19,20 @@
           Загрузить и обработать
         </app-button>
       </div>
-
-      <div
-          class="bg-green-200 absolute top-0 left-0 h-full progress-bar"
-          [style.width.%]="uploadingProgress()"
-          [style.transition]="uploadingProgress() == 0 ? 'width ease-in-out 2s' : 'width linear 0.1s'"
-        ></div>
     </div>
   </div>
+
+  @if (isUploading()) {
+    <div class="w-full" animate.enter="progress-bar-enter">
+      <div class="flex gap-2 items-center px-4 mt-4">
+        <div class="bg-neutral-200 flex-1 h-3 rounded-full overflow-hidden relative">
+          <div
+            class="bg-blue-600 h-full rounded-full progress-bar"
+            [style.width.%]="uploadingProgress()"
+            ></div>
+        </div>
+        <p class="font-medium text-neutral-900 w-12 text-right">{{ uploadingProgress() }}%</p>
+      </div>
+    </div>
+  }
 }
