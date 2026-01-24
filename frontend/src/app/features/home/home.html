@@ -15,6 +15,9 @@
       [uploadingProgress]="uploadingProgress()"
       (submit)="submit()"
       ></app-files-list>
+    @if (isUploading()) {
+      <app-files-uploading-progress [uploadingProgress]="uploadingProgress()"></app-files-uploading-progress>
+    }
   </form>
 
   <app-recent-docs-list></app-recent-docs-list>

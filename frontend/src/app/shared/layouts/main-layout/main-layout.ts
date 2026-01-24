@@ -9,10 +9,5 @@ import { RouterOutlet } from "@angular/router";
   templateUrl: "./main-layout.html",
   styleUrl: "./main-layout.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // host: {
-  //   class: "h-full",
-  // },
 })
-export class MainLayout {
-
-}
+export class MainLayout {}

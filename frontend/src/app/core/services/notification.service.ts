@@ -16,19 +16,19 @@ export class NotificationService {
   private notifications = signal<NotificationItem[]>([]);
   readonly notifications$ = toObservable(this.notifications);
 
-  info(message: string, timeout?: number): void {
+  public info(message: string, timeout?: number): void {
     this.show("info", message, timeout);
   }
 
-  warn(message: string, timeout: number = 3000): void {
+  public warn(message: string, timeout: number = 3000): void {
     this.show("warning", message, timeout);
   }
 
-  error(message: string, timeout: number = 5000): void {
+  public error(message: string, timeout: number = 5000): void {
     this.show("error", message, timeout);
   }
 
-  success(message: string, timeout: number = 15000): void {
+  public success(message: string, timeout: number = 15000): void {
     this.show("success", message, timeout);
   }
 
@@ -52,7 +52,7 @@ export class NotificationService {
     }
   }
 
-  dismiss(
+  public dismiss(
     id: number,
   ): void {
     this.notifications.set(
