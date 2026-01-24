@@ -1,7 +1,8 @@
+import { NotificationService } from "../../../../core/services";
 import { Button } from "../../../../shared/components/button/button";
 import { Icon } from "../../../../shared/components/icon/icon";
 import { NgClass } from "@angular/common";
-import { ChangeDetectionStrategy, Component, ElementRef, forwardRef, signal, ViewChild } from "@angular/core";
+import { ChangeDetectionStrategy, Component, ElementRef, forwardRef, inject, input, signal, ViewChild } from "@angular/core";
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
 
 @Component({
@@ -19,12 +20,14 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
   ],
 })
 export class FilesInput implements ControlValueAccessor {
-  // private readonly notificationService = inject(NotificationService);
+  private readonly notificationService = inject(NotificationService);
 
   private ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/pdf",
   ];
+
+  isUploading = input<boolean>(false);
 
   protected isDraggedOver = signal<boolean>(false);
   protected files = signal<File[]>([]);
@@ -73,13 +76,14 @@ export class FilesInput implements ControlValueAccessor {
   }
 
   private processFiles(files: File[] | FileList): void {
+    if (this.isUploading())
+      return this.notificationService.warn("Вы не можете добавлять файлы во время загрузки");
+
     const updates: File[] = [];
 
-    // TODO: notify abt invalid file type
     for (const file of files) {
       if (!this.ALLOWED_FILE_TYPES.includes(file.type))
-        return;
-        // return this.notificationService.show("error", "Invalid photo type");
+        return this.notificationService.error("Данный тип файла не поддерживается");
 
       updates.push(file);
     }

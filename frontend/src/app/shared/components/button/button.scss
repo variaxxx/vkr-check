@@ -7,12 +7,19 @@
       color: white;
       border-color: transparent;
 
-      &:hover {
+      &:disabled {
+        background-color: var(--color-neutral-400);
+        color: var(--color-neutral-100);
+        border-color: transparent;
+        cursor: not-allowed;
+      }
+
+      &:enabled:hover {
         background-color: var(--color-blue-700);
         color: var(--color-blue-100);
       }
 
-      &:focus-visible {
+      &:enabled:focus-visible {
         outline-color: var(--color-blue-500);
       }
     }
@@ -21,15 +28,21 @@
       background-color: white;
       color: var(--color-neutral-600);
       border-color: var(--color-neutral-100);
-      font-weight: var(--font-weight-medium);
 
-      &:hover {
+      &:disabled {
+        background-color: var(--color-neutral-100);
+        color: var(--color-neutral-400);
+        border-color: var(--color-neutral-200);
+        cursor: not-allowed;
+      }
+
+      &:enabled:hover {
         background-color: var(--color-neutral-100);
         border-color: var(--color-neutral-200);
         color: var(--color-black);
       }
 
-      &:focus-visible {
+      &:enabled:focus-visible {
         outline-color: var(--color-black-500);
       }
     }

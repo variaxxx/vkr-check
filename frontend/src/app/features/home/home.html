@@ -7,7 +7,7 @@
     (ngSubmit)="submit()"
     class="mb-8 flex flex-col gap-4"
     >
-    <app-files-input formControlName="files"></app-files-input>
+    <app-files-input formControlName="files" [isUploading]="isUploading()"></app-files-input>
     <app-files-list
       [control]="form.controls.files"
       [style.display]="!form.controls.files.value.length ? 'none' : 'block'"

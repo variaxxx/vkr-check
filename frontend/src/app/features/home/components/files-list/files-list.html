@@ -13,8 +13,8 @@
       <p class="text-sm text-neutral-500">Готово к загрузке: <span class="font-medium text-neutral-900"> {{ files.length }} </span></p>
 
       <div class="flex gap-3 max-md:flex-col-reverse">
-        <app-button type="button" priority="secondary" size="sm" (click)="clearAll()">Очистить все</app-button>
-        <app-button type="button" priority="primary" size="sm" (click)="submit()">
+        <app-button type="button" priority="secondary" size="sm" (click)="clearAll()" [disabled]="isUploading()">Очистить все</app-button>
+        <app-button type="button" priority="primary" size="sm" (click)="submit()" [disabled]="isUploading()">
           <app-icon icon="upload" class="h-4 w-4"></app-icon>
           Загрузить и обработать
         </app-button>

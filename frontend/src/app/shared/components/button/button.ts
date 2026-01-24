@@ -12,4 +12,5 @@ export class Button {
   type = input<ButtonType>("button");
   priority = input<ButtonPriority>("primary");
   size = input<ButtonSize>("md");
+  disabled = input<boolean>(false);
 }
