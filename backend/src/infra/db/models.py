@@ -2,8 +2,17 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import UUID, Column, DateTime, Enum, ForeignKey, String, Table
-from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy import (
+    UUID,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Numeric,
+    String,
+    Table,
+)
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.enums import DocumentStatus
@@ -35,7 +44,10 @@ class Document(BaseModel):
     processed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    result: Mapped[str] = mapped_column(String(), nullable=True)
+
+    topic: Mapped[str] = mapped_column(String(), nullable=True)
+    result: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    score: Mapped[float] = mapped_column(Numeric(4, 2), nullable=True)
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="documents")  # type: ignore # noqa: F821
