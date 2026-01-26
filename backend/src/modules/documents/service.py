@@ -13,7 +13,11 @@ from src.infra.minio import MinioService
 from src.ml_worker import process_document
 
 from .repositories import DocumentRepository
-from .schemas import DocumentInfoResponse, UploadDocumentResponse
+from .schemas import (
+    DocumentResponse,
+    DocumentShortResponse,
+    UploadDocumentResponse,
+)
 
 
 class DocumentService:
@@ -111,13 +115,13 @@ class DocumentService:
         self,
         document_id: uuid.UUID | str,
         user: TokenUserInfo,
-    ) -> DocumentInfoResponse:
+    ) -> DocumentResponse:
         doc = await self.doc_repo.get_by_id(id=document_id)
 
         if doc is None or doc.user_id != user.id:
             raise HTTPException(404, "Document not found")
 
-        return self._to_doc_info(doc)
+        return self._to_response(doc)
 
     async def get_many(
         self,
@@ -125,7 +129,7 @@ class DocumentService:
         offset: Optional[int],
         limit: Optional[int],
         status: Optional[DocumentStatus],
-    ) -> FindManyResponse[DocumentInfoResponse]:
+    ) -> FindManyResponse[DocumentShortResponse]:
         limit = clamp(limit, 0, 50) if limit is not None else 25
         offset = max(0, offset) if offset is not None else 0
 
@@ -134,9 +138,9 @@ class DocumentService:
         )
         total = await self.doc_repo.get_total(user_id=user.id, status=status)
 
-        formatted_docs = [self._to_doc_info(doc) for doc in docs]
+        formatted_docs = [self._to_short_response(doc) for doc in docs]
 
-        return FindManyResponse[DocumentInfoResponse](
+        return FindManyResponse[DocumentShortResponse](
             total=total, count=len(formatted_docs), items=formatted_docs
         )
 
@@ -146,7 +150,7 @@ class DocumentService:
         user: TokenUserInfo,
         limit: Optional[int],
         offset: Optional[int],
-    ) -> FindManyResponse[DocumentInfoResponse]:
+    ) -> FindManyResponse[DocumentShortResponse]:
         if not len(query):
             raise HTTPException(401, "Empty query provided")
 
@@ -158,16 +162,16 @@ class DocumentService:
         )
 
         total = await self.doc_repo.search_total(query=query, user_id=user.id)
-        items = [self._to_doc_info(doc) for doc in docs]
+        items = [self._to_short_response(doc) for doc in docs]
 
-        return FindManyResponse[DocumentInfoResponse](
+        return FindManyResponse[DocumentShortResponse](
             total=total,
             count=len(items),
             items=items,
         )
 
-    def _to_doc_info(self, doc) -> DocumentInfoResponse:
-        return DocumentInfoResponse(
+    def _to_response(self, doc) -> DocumentResponse:
+        return DocumentResponse(
             id=doc.id,
             created_at=doc.created_at,
             processed_at=doc.processed_at,
@@ -176,6 +180,28 @@ class DocumentService:
             if isinstance(doc.status, str)
             else doc.status,
             result=doc.result,
+            topic=doc.topic,
+            score=doc.score,
+            authors=[
+                f"{a.last_name} {a.first_name} {a.middle_name}"
+                if isinstance(a, Author)
+                else f"{a['last_name']} {a['first_name']} {a['middle_name']}"
+                for a in doc.authors
+            ]
+            if doc.authors
+            else None,
+        )
+
+    def _to_short_response(self, doc) -> DocumentShortResponse:
+        return DocumentShortResponse(
+            id=doc.id,
+            created_at=doc.created_at,
+            original_name=doc.original_name,
+            status=DocumentStatus[doc.status]
+            if isinstance(doc.status, str)
+            else doc.status,
+            topic=doc.topic,
+            score=doc.score,
             authors=[
                 f"{a.last_name} {a.first_name} {a.middle_name}"
                 if isinstance(a, Author)

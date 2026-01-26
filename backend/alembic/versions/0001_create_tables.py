@@ -2,13 +2,14 @@
 
 Revision ID: 0001
 Revises:
-Create Date: 2026-01-15 18:48:00.632907
+Create Date: 2026-01-26 18:35:26.203563
 
 """
 
 from typing import Sequence, Union
 
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
@@ -27,7 +28,8 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("last_name", sa.String(length=256), nullable=False),
         sa.Column("first_name", sa.String(length=256), nullable=False),
-        sa.Column("middle_name", sa.String(length=256), nullable=False),
+        sa.Column("middle_name", sa.String(length=256), nullable=True),
+        # sa.Column("search_vector", postgresql.TSVECTOR(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -79,6 +81,11 @@ def upgrade() -> None:
         ),
         sa.Column("original_name", sa.String(length=512), nullable=False),
         sa.Column("processed_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("topic", sa.String(), nullable=True),
+        sa.Column(
+            "result", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
+        sa.Column("score", sa.Numeric(precision=4, scale=2), nullable=True),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column(
             "created_at",
