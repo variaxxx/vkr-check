@@ -2,7 +2,7 @@ import { IconName } from "../../../../../app.icons";
 import { Icon } from "../../../../../shared/components/icon/icon";
 import { DOCUMENT_STATUS, DocumentStatus } from "../../../../../shared/enums";
 import { PrettyDatePipe } from "../../../../../shared/pipes";
-import { DocumentInfoResponse } from "../../../../documents/dto";
+import { DocumentShortResponse } from "../../../../documents/dto";
 import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
@@ -43,7 +43,7 @@ const STATUS_CONFIG: Record<DocumentStatus, StatusConfig> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecentDocsListItem {
-  doc = input.required<DocumentInfoResponse>();
+  doc = input.required<DocumentShortResponse>();
 
   get status(): StatusConfig {
     return STATUS_CONFIG[this.doc().status];

@@ -1,1 +1,2 @@
-export * from "./document-info.response";
+export * from "./document-short.response";
+export * from "./document.response";
