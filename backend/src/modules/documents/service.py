@@ -86,7 +86,7 @@ class DocumentService:
         try:
             document = await self.doc_repo.get_by_id(id=document_id)
 
-            if document is None or document.user_id != user.id:
+            if document is None or str(document.user_id) != user.id:
                 raise HTTPException(404, "Document not found")
 
             bucket_name = document.file_url.split("/")[0]
