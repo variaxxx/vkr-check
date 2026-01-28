@@ -19,12 +19,12 @@ export interface AppRoute {
 export class Navbar {
   public routes: AppRoute[] = [
     {
-      route: "/",
+      route: "",
       label: "Загрузка",
       icon: "upload",
     },
     {
-      route: "history",
+      route: "history/",
       label: "История",
       icon: "history",
     },

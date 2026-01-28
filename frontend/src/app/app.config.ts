@@ -5,6 +5,7 @@ import { IconService } from "./shared/components/icon/icon.service";
 import { provideHttpClient, withInterceptors } from "@angular/common/http";
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from "@angular/core";
 import { provideRouter } from "@angular/router";
+import { provideNgxSkeletonLoader } from "ngx-skeleton-loader";
 import { firstValueFrom } from "rxjs";
 
 export function appInit() {
@@ -18,5 +19,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor, responseDataInterceptor])),
     provideAppInitializer(appInit),
+    provideNgxSkeletonLoader({
+      theme: {
+        extendsFromRoot: true,
+        display: "block",
+      },
+    }),
   ],
 };

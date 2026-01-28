@@ -15,6 +15,10 @@ export const routes: Routes = [
         path: "",
         loadComponent: () => import("./features/home/home").then(m => m.Home),
       },
+      {
+        path: "history",
+        loadComponent: () => import("./features/history/history").then(m => m.History),
+      },
     ],
   },
   {

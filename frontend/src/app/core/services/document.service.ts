@@ -1,5 +1,5 @@
 import { env } from "../../../environments/environment";
-import { DocumentInfoResponse } from "../../features/documents/dto";
+import { DocumentShortResponse } from "../../features/documents/dto";
 import { DocumentStatus } from "../../shared/enums";
 import { FindManyApiReponse } from "../interfaces";
 import { HttpClient, HttpEventType, HttpParams } from "@angular/common/http";
@@ -25,7 +25,7 @@ export class DocumentService {
 
   public getRecent(
     limit: number = 5,
-  ): Observable<FindManyApiReponse<DocumentInfoResponse>> {
+  ): Observable<FindManyApiReponse<DocumentShortResponse>> {
     return this.refresh$.pipe(
       startWith(void 0),
       switchMap(() => this.getMany({ limit })),
@@ -70,20 +70,22 @@ export class DocumentService {
       limit?: number;
       offset?: number;
       status?: DocumentStatus;
+      query?: string;
     },
-  ): Observable<FindManyApiReponse<DocumentInfoResponse>> {
-    const { limit, offset, status } = options;
+  ): Observable<FindManyApiReponse<DocumentShortResponse>> {
+    const { limit, offset, status, query } = options;
 
     const params = new HttpParams({
       fromObject: {
         limit: limit ?? 25,
         offset: offset ?? 0,
         ...(status && { status }),
+        ...(query && { query }),
       },
     });
 
-    return this.http.get<FindManyApiReponse<DocumentInfoResponse>>(
-      `${env.API_BASE_URL}documents`,
+    return this.http.get<FindManyApiReponse<DocumentShortResponse>>(
+      query ? `${env.API_BASE_URL}documents/search` : `${env.API_BASE_URL}documents`,
       { params },
     );
   }

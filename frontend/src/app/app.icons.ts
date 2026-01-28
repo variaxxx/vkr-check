@@ -14,6 +14,12 @@ export const iconsConfig = {
     "clock",
     "alert-triangle",
     "info",
+    "search",
+    "filter",
+    "download",
+    "refresh",
+    "chevron-left",
+    "chevron-right",
   ] as const,
 };
 
