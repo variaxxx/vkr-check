@@ -3,11 +3,5 @@
     <p class="text-sm font-medium text-neutral-900">{{ doc().original_name }}</p>
     <p class="text-xs text-neutral-500 mt-1">{{ doc().created_at | prettyDate }}</p>
   </div>
-  <span
-    class="flex items-center text-xs px-2.5 py-1 rounded-full gap-1 font-medium"
-    [ngClass]="status.classes"
-    >
-    <app-icon [icon]="status.icon" class="w-4 h-4"></app-icon>
-    {{ status.label }}
-  </span>
+  <app-document-status-plate [status]="doc().status"></app-document-status-plate>
 </div>

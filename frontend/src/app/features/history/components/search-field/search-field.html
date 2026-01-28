@@ -1,0 +1,15 @@
+<app-icon icon="search" class="text-neutral-400 h-5 w-5 absolute left-2.5 top-1/2 -translate-y-1/2"></app-icon>
+<input
+  type="text"
+  placeholder="Поиск"
+  class="border-2 border-neutral-200 focus:border-blue-600 transition-colors rounded-lg pr-4 pl-10 py-2 relative outline-none w-full"
+  [value]="query()"
+  (blur)="onTouched()"
+  (input)="input($any($event.target).value)"
+  >
+<app-icon
+  icon="x"
+  class="text-neutral-400 h-5 w-5 absolute right-2.5 top-1/2 -translate-y-1/2 hover:text-neutral-900 cursor-pointer transition-colors"
+  [class.hidden]="query() === ''"
+  (click)="clear($event)"
+  ></app-icon>

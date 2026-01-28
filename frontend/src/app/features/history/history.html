@@ -1,0 +1,33 @@
+<div class="flex flex-col h-full">
+  <div class="flex items-center justify-between gap-3 mb-6">
+    <h1 class="text-2xl font-bold text-neutral-900">История загрузок</h1>
+    <app-button type="button" priority="primary" size="sm" [disabled]="isUpdating()" (click)="update()">
+      <app-icon icon="refresh" class="w-4 h-4" [class.animate-spin]="isUpdating()"></app-icon>
+      Обновить
+    </app-button>
+  </div>
+
+  <div
+    class="bg-white rounded-xl border-2 border-neutral-200 p-4 flex flex-col md:flex-row gap-3 mb-4"
+    [formGroup]="form"
+    >
+    <app-search-field
+      formControlName="query"
+      class="grow"
+    ></app-search-field>
+    <app-select
+      formControlName="status"
+      [options]="filterOptions"
+      class="md:max-w-64 w-full"
+    ></app-select>
+  </div>
+
+  <app-documents-list
+    class="flex-1"
+    [documents]="documents()"
+    [page]="page()"
+    [pageSize]="pageSize"
+    [total]="total()"
+    (pageChange)="page.set($event)"
+  ></app-documents-list>
+</div>

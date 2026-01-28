@@ -70,20 +70,22 @@ export class DocumentService {
       limit?: number;
       offset?: number;
       status?: DocumentStatus;
+      query?: string;
     },
   ): Observable<FindManyApiReponse<DocumentShortResponse>> {
-    const { limit, offset, status } = options;
+    const { limit, offset, status, query } = options;
 
     const params = new HttpParams({
       fromObject: {
         limit: limit ?? 25,
         offset: offset ?? 0,
         ...(status && { status }),
+        ...(query && { query }),
       },
     });
 
     return this.http.get<FindManyApiReponse<DocumentShortResponse>>(
-      `${env.API_BASE_URL}documents`,
+      query ? `${env.API_BASE_URL}documents/search` : `${env.API_BASE_URL}documents`,
       { params },
     );
   }

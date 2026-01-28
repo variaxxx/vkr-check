@@ -22,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideNgxSkeletonLoader({
       theme: {
         extendsFromRoot: true,
+        display: "block",
       },
     }),
   ],

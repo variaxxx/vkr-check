@@ -1,0 +1,10 @@
+<app-icon icon="filter" class="text-neutral-400 h-5 w-5 absolute left-2.5 top-1/2 -translate-y-1/2"></app-icon>
+<select
+  class="border-2 border-neutral-200 focus:border-blue-600 transition-colors rounded-lg pr-4 pl-10 py-2 relative outline-none appearance-none w-full"
+  [ngModel]="selectedOption()"
+  (change)="select($any($event.target).value)"
+  >
+  @for (option of options(); track $index) {
+    <option [value]="option.value">{{ option.label }}</option>
+  }
+</select>
