@@ -26,6 +26,8 @@ export class DocumentsList {
 
   public pageChange = output<number>();
 
+  protected columns = ["Файл", "Статус", "Дата загрузки", "Авторы", "Тема", "Оценка", "Действия"];
+
   protected isLastPage = computed(() => {
     const total = this.total();
     return !total || this.page() * this.pageSize() >= total;

@@ -3,27 +3,11 @@
     <table class="w-full">
       <thead class="bg-neutral-100 h-fit">
         <tr>
-          <th
-            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
-            >Файл</th>
-          <th
-            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
-            >Статус</th>
-          <th
-            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
-            >Дата загрузки</th>
-          <th
-            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
-            >Авторы</th>
-          <th
-            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
-            >Тема</th>
-          <th
-            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
-            >Оценка</th>
-          <th
-            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
-            >Действия</th>
+          @for (col of columns; track $index) {
+            <th
+              class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
+              >{{ col }}</th>
+          }
         </tr>
       </thead>
       <tbody class="divide-neutral-200 divide-y">
@@ -91,9 +75,7 @@
                       {{ a }}
                     </div>
                   }
-                } @else {
-                  —
-                }
+                } @else { — }
               } @else {
                 <ngx-skeleton-loader
                   [theme]="{ height: '20px', width: '200px', margin: '0' }"
@@ -151,15 +133,19 @@
     <div class="px-4 py-3 border-t border-neutral-200 flex gap-4">
       <div class="inline-flex border-2 border-neutral-200 divide-x divide-neutral-200 rounded-lg overflow-hidden">
         <button
-          class="h-10 w-10 disabled:bg-neutral-100 active:hover:bg-neutral-50 disabled:text-neutral-400 text-neutral-900 cursor-pointer font-bold disabled:cursor-not-allowed enabled:hover:bg-neutral-50 transition-colors"
+          class="h-10 w-10 p-2.5 disabled:bg-neutral-100 active:hover:bg-neutral-50 disabled:text-neutral-400 text-neutral-900 cursor-pointer disabled:cursor-not-allowed enabled:hover:bg-neutral-50 transition-colors"
           (click)="prevPage()"
           [disabled]="this.page() == 1 || this.documents() === undefined"
-          ><</button>
+          >
+          <app-icon icon="chevron-left"></app-icon>
+        </button>
         <button
-          class="h-10 w-10 disabled:bg-neutral-100 active:hover:bg-neutral-50 disabled:text-neutral-400 text-neutral-900 cursor-pointer font-bold disabled:cursor-not-allowed enabled:hover:bg-neutral-50 transition-colors"
+          class="h-10 w-10 p-2.5 disabled:bg-neutral-100 active:hover:bg-neutral-50 disabled:text-neutral-400 text-neutral-900 cursor-pointer disabled:cursor-not-allowed enabled:hover:bg-neutral-50 transition-colors"
           (click)="nextPage()"
           [disabled]="isLastPage() || this.documents() === undefined"
-          >></button>
+          >
+          <app-icon icon="chevron-right"></app-icon>
+        </button>
       </div>
 
       <span class="text-sm text-neutral-500 inline-flex items-center gap-1">
@@ -169,11 +155,7 @@
           <span class="text-neutral-900 font-medium">{{ documents()?.length }}</span>
         } @else {
           <ngx-skeleton-loader
-            [theme]="{
-              height: '17px',
-              width: '20px',
-              margin: '0',
-            }"
+            [theme]="{ height: '17px', width: '20px', margin: '0' }"
             class="h-5"
           ></ngx-skeleton-loader>
         }
@@ -184,11 +166,7 @@
           <span class="text-neutral-900 font-medium">{{ total() }}</span>
         } @else {
           <ngx-skeleton-loader
-            [theme]="{
-              height: '17px',
-              width: '20px',
-              margin: '0',
-            }"
+            [theme]="{ height: '17px', width: '20px', margin: '0' }"
             class="h-5"
           ></ngx-skeleton-loader>
         }

@@ -18,6 +18,8 @@ export const iconsConfig = {
     "filter",
     "download",
     "refresh",
+    "chevron-left",
+    "chevron-right",
   ] as const,
 };
 

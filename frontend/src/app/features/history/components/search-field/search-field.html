@@ -2,7 +2,7 @@
 <input
   type="text"
   placeholder="Поиск"
-  class="border-2 border-neutral-200 focus:border-blue-600 transition-colors rounded-lg pr-4 pl-10 py-2 relative outline-none w-full"
+  class="border-2 border-neutral-200 focus:border-blue-600 transition-colors rounded-lg px-10 py-2 relative outline-none w-full"
   [value]="query()"
   (blur)="onTouched()"
   (input)="input($any($event.target).value)"
