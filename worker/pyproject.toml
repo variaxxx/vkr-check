@@ -16,6 +16,8 @@ dependencies = [
     "langchain-community (>=0.4.1,<0.5.0)",
     "langchain-huggingface (>=1.2.0,<2.0.0)",
     "sentence-transformers (>=5.2.2,<6.0.0)",
+    "supervision (>=0.27.0,<0.28.0)",
+    "ultralytics (>=8.4.11,<9.0.0)",
 ]
 
 [dependency-groups]

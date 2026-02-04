@@ -15,6 +15,7 @@ from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
 from src.services.vkr_analyzer import VKRAnalyzer
 from src.services.vkr_report import VKRReport
+from src.services.pages_markup import MarkupPages
 
 
 @worker.task(
@@ -42,6 +43,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     rag_engine: RAGEngine = di.get(RAGEngine)
     vkr_analyzer: VKRAnalyzer = di.get(VKRAnalyzer)
     vkr_report: VKRReport = di.get(VKRReport)
+    sign_verify: MarkupPages = di.get(MarkupPages)
 
     doc = db.get(Document, doc_id)
 
@@ -52,6 +54,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     db.commit()
 
     try:
+
         bucket_name = doc.file_url.split("/")[0]
         object_name = doc.file_url[len(bucket_name) + 1 :]
 
@@ -59,6 +62,10 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             bucket_name=bucket_name, object_name=object_name
         )
         file_buffer = io.BytesIO(file_response.read())
+        #блок вериифкации подписи
+        sign_verify_status = sign_verify.markup_pdf(file_buffer)
+        if not sign_verify_status:
+            raise Exception("Верификация подписей не прошла")
 
         task_points = task_parser.get_task_points(file_buffer)
         info = info_parser.get_info(file_buffer)
@@ -88,6 +95,8 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             doc.authors.append(author)
 
         doc.score = report.summary.average_score
+
+
         doc.status = DocumentStatus.SUCCESS
         doc.topic = info.theme
         db.commit()

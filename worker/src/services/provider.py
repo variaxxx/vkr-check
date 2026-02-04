@@ -7,6 +7,7 @@ from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
 from src.services.vkr_analyzer import VKRAnalyzer
 from src.services.vkr_report import VKRReport
+from src.services.pages_markup import MarkupPages
 
 
 class ServicesProvider(Provider):
@@ -17,3 +18,4 @@ class ServicesProvider(Provider):
     task_parser = provide(TaskParser, scope=Scope.APP)
     vkr_analyzer = provide(VKRAnalyzer, scope=Scope.APP)
     vkr_report = provide(VKRReport, scope=Scope.APP)
+    sign_detection = provide(MarkupPages, scope=Scope.APP)
