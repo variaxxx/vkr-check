@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from io import BytesIO
 import base64
 
-from .pdf_processor import PDFProcessor
+from .doc_processors import DocumentProcessorService
 from .llm_service import LLMService
 
 
@@ -18,9 +18,9 @@ def base64_to_image(base64_str: str) -> Image:
     return image
 
 class MarkupPages:
-    def __init__(self, llm_service: LLMService, pdf_processor: PDFProcessor):
+    def __init__(self, llm_service: LLMService, doc_processor: DocumentProcessorService):
         self.llm_service = llm_service
-        self.pdf_processor = pdf_processor
+        self.doc_processor = doc_processor
         self.verbose = verbose
         self.model = YOLO(".yolov8s.pt", verbose=False)
 
@@ -56,7 +56,7 @@ class MarkupPages:
         return: bool
         """
 
-        pages = self.pdf_processor.get_pages_as_base64(pdf_bytes)
+        pages = self.doc_processor.get_pages_as_base64(pdf_bytes)
         pages_images = [base64_to_image(page) for page in pages]
         pages_indeces = [i for i, page in enumerate(pages_images) if sign_detect(page)]
         pages_markup = [pages[i] for i in pages_indeces]

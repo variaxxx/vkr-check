@@ -2,20 +2,20 @@ import io
 from typing import List
 
 from .llm_service import LLMService
-from .pdf_processor import PDFProcessor
+from .doc_processors import DocumentProcessorService
 
 
 class InfoParser:
     """Класс для извлечения задания из PDF с помощью Vision"""
 
-    def __init__(self, llm_service: LLMService, pdf_processor: PDFProcessor):
+    def __init__(self, llm_service: LLMService, doc_processor: DocumentProcessorService):
         self.llm_service = llm_service
-        self.pdf_processor = pdf_processor
-
+        self.doc_processor = doc_processor
+        
     def get_fio(self, pdf_file: io.BytesIO) -> List[str]:
         """Извлекает пункты задания из PDF"""
 
-        pages = self.pdf_processor.get_pages_as_base64(pdf_file, 1, 1)
+        pages = self.doc_processor.get_pages_as_base64(pdf_file, 1, 1)
         content = [
             {
                 "type": "text",
@@ -38,7 +38,7 @@ class InfoParser:
     def get_theme(self, pdf_file: io.BytesIO) -> List[str]:
         """Извлекает пункты задания из PDF"""
 
-        pages = self.pdf_processor.get_pages_as_base64(pdf_file, 2, 2)
+        pages = self.doc_processor.get_pages_as_base64(pdf_file, 2, 2)
         content = [
             {
                 "type": "text",

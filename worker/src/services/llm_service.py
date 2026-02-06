@@ -11,6 +11,7 @@ class LLMService:
             base_url=f"http://{config.API_IP}:{config.API_PORT}/v1",
             model=config.MODEL_NAME,
             temperature=config.TEMPERATURE,
+            max_tokens=config.MAX_TOKENS
         )
 
     def get_llm(self):

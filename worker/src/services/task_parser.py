@@ -5,20 +5,20 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from .llm_service import LLMService
-from .pdf_processor import PDFProcessor
+from .doc_processors import DocumentProcessorService
 
 
 class TaskParser:
     """Класс для извлечения задания из PDF с помощью Vision"""
 
-    def __init__(self, llm_service: LLMService, pdf_processor: PDFProcessor):
+    def __init__(self, llm_service: LLMService, doc_processor: DocumentProcessorService):
         self.llm_service = llm_service
-        self.pdf_processor = pdf_processor
+        self.doc_processor = doc_processor
 
     def get_task_points(self, pdf_bytes: io.BytesIO) -> List[str]:
         """Извлекает пункты задания из PDF"""
 
-        pages = self.pdf_processor.get_pages_as_base64(pdf_bytes, 2, 4)
+        pages = self.doc_processor.get_pages_as_base64(pdf_bytes, 2, 4)
         content = [
             {
                 "type": "text",
