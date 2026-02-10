@@ -1,13 +1,14 @@
-import supervision as sv
-from ultralytics import YOLO
-from typing import List, Tuple
-from PIL.Image import Image
-import sys
+import base64
+import io
 import os
+import sys
 from contextlib import contextmanager
 from io import BytesIO
-import io
-import base64
+from typing import List, Tuple
+
+import supervision as sv
+from PIL import Image as PILImage
+from ultralytics import YOLO
 
 from .doc_processors import DocumentProcessorService
 from .llm_service import LLMService
@@ -16,19 +17,22 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(CURRENT_DIR, "yolov8s.pt")
 
 
-def base64_to_image(base64_str: str) -> Image:
+def base64_to_image(base64_str: str) -> PILImage:
     image_bytes = base64.b64decode(base64_str)
-    image = Image.open(BytesIO(image_bytes))
+    image = PILImage.open(BytesIO(image_bytes))
     return image
 
+
 class MarkupPages:
-    def __init__(self, llm_service: LLMService, doc_processor: DocumentProcessorService):
+    def __init__(
+        self, llm_service: LLMService, doc_processor: DocumentProcessorService
+    ):
         self.llm_service = llm_service
         self.doc_processor = doc_processor
         self.verbose = False
         self.model = YOLO(MODEL_PATH, verbose=False)
 
-    def sign_detect(self, image: Image, threshold: float = 0.3) -> bool:
+    def sign_detect(self, image: PILImage, threshold: float = 0.3) -> bool:
         """
         Детектит,есть ли подписи на изображении.
 
@@ -51,7 +55,10 @@ class MarkupPages:
         detections = sv.Detections.from_ultralytics(results[0])
 
         detections_list = detections.xyxy.tolist()
-        detections_list = [((int(x1), int(y1)), (int(x2), int(y2))) for x1, y1, x2, y2 in detections_list]
+        detections_list = [
+            ((int(x1), int(y1)), (int(x2), int(y2)))
+            for x1, y1, x2, y2 in detections_list
+        ]
         return len(detections_list) > 0
 
     def markup_pdf(self, pdf_bytes: io.BytesIO) -> bool:
@@ -60,9 +67,11 @@ class MarkupPages:
         return: bool
         """
 
-        pages = self.doc_processor.get_pages_as_base64(pdf_bytes)
+        pages = self.doc_processor.get_pages_as_base64(pdf_bytes, 1, 25)
         pages_images = [base64_to_image(page) for page in pages]
-        pages_indeces = [i for i, page in enumerate(pages_images) if self.sign_detect(page)]
+        pages_indeces = [
+            i for i, page in enumerate(pages_images) if self.sign_detect(page)
+        ]
         pages_markup = [pages[i] for i in pages_indeces]
         count = len(pages_indeces)
         if count == 0:
@@ -71,17 +80,18 @@ class MarkupPages:
         for b64 in pages_markup:
             content = [
                 {
-                    "type": "text", "text": "Определи, везде ли на этом изображении проставлены подписи? Ответь '1', "
-                "если проставлены все подписи, либо '0', если не все подписи проставлены. "
-                "Важно: Каждая подпись должна соотвествовать фамилии, если пустой блок без фамилии, то это НЕ считается отсутствием подписи."
+                    "type": "text",
+                    "text": "Определи, везде ли на этом изображении проставлены подписи? Ответь '1', "
+                    "если проставлены все подписи, либо '0', если не все подписи проставлены. "
+                    "Важно: Каждая подпись должна соотвествовать фамилии, если пустой блок без фамилии, то это НЕ считается отсутствием подписи.",
                 },
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
-                }
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                },
             ]
             answer = self.llm_service.invoke_vision(content)
-            if answer == '1':
+            if answer == "1":
                 c += 1
 
         return count == c

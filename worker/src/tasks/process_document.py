@@ -1,6 +1,6 @@
 import io
-import uuid
 import json
+import uuid
 from typing import Union
 
 from sqlalchemy.orm import Session
@@ -10,21 +10,22 @@ from src.core.di import run_in_di
 from src.infra.db.models import Author, Document
 from src.infra.minio import MinioService
 from src.main import worker
+from src.services.doc_processors import DocumentProcessorService
+from src.services.headers_classifier import HeaderClassifier
 from src.services.info_parser import InfoParser
-from src.services.doc_processors import DocumentProcessorService 
+from src.services.pages_markup import MarkupPages
 from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
 from src.services.vkr_analyzer import VKRAnalyzer
-from src.services.vkr_report import VKRReport
-from src.services.pages_markup import MarkupPages
-from src.services.headers_classifier import HeaderClassifier
-from src.services.vkr_intro_checker import VKRIntroductionChecker
 from src.services.vkr_conclusion_checker import VKRConclusionChecker
+from src.services.vkr_intro_checker import VKRIntroductionChecker
+from src.services.vkr_report import VKRReport
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/pdf",
 ]
+
 
 @worker.task(
     name="ml.process_document",
@@ -45,7 +46,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     rag_engine: RAGEngine = di.get(RAGEngine)
     vkr_analyzer: VKRAnalyzer = di.get(VKRAnalyzer)
     vkr_report: VKRReport = di.get(VKRReport)
-    # sign_verify: MarkupPages = di.get(MarkupPages)
+    sign_verify: MarkupPages = di.get(MarkupPages)
     header_classifier: HeaderClassifier = di.get(HeaderClassifier)
     intro_checker = di.get(VKRIntroductionChecker)
     conclusion_checker = di.get(VKRConclusionChecker)
@@ -60,15 +61,17 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     try:
         bucket_name, object_name = doc.file_url.split("/", 1)
         obj_stat = minio.client.stat_object(bucket_name, object_name)
-        
+
         doc_service.set_context(obj_stat.content_type)
 
         file_response = minio.client.get_object(bucket_name, object_name)
         file_buffer = io.BytesIO(file_response.read())
+        status: bool = False
 
-        # if doc_service.is_pdf():
-        #     if not sign_verify.markup_pdf(file_buffer):
-        #         raise Exception("Верификация подписей не прошла")
+        if doc_service.is_pdf():
+            status = sign_verify.markup_pdf(file_buffer)
+        signs_verification = []
+        signs_verification.append({"signs_status_code": status})
 
         task_points = task_parser.get_task_points(file_buffer)
         file_buffer.seek(0)
@@ -90,32 +93,33 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
         intro_evaluations = []
         intro_score, intro_report = intro_checker.evaluate(
-            vector_db,
-            total_doc_volume=len(raw_chunks)
+            vector_db, total_doc_volume=len(raw_chunks)
         )
 
         conclusion_evaluations = []
         conclusion_score, conclusion_report = conclusion_checker.evaluate(
-            vector_db,
-            is_collective=len(fio_list) > 1
+            vector_db, is_collective=len(fio_list) > 1
         )
 
-        intro_evaluations.append({
-            "section": "introduction",
-            "score": intro_score,
-            "details": intro_report
-        })
+        intro_evaluations.append(
+            {
+                "section": "introduction",
+                "score": intro_score,
+                "details": intro_report,
+            }
+        )
 
-        conclusion_evaluations.append({
-            "section": "conclusion",
-            "score": conclusion_score,
-            "details": conclusion_report
-        })
+        conclusion_evaluations.append(
+            {
+                "section": "conclusion",
+                "score": conclusion_score,
+                "details": conclusion_report,
+            }
+        )
 
         info_data = {"students": fio_list, "theme": theme}
         report_json = vkr_report.generate_report(info_data, evaluations)
         report_dict = json.loads(report_json)
-
 
         for student in fio_list:
             parts = student.split()
@@ -128,7 +132,9 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             doc.authors.append(author)
 
         doc.score = report_dict["summary"].get("average_score", 0)
-        doc.topic = theme if isinstance(theme, str) else (theme[0] if theme else "")
+        doc.topic = (
+            theme if isinstance(theme, str) else (theme[0] if theme else "")
+        )
         doc.status = DocumentStatus.SUCCESS
         doc.result = report_json
         db.commit()

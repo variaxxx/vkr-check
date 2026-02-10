@@ -10,8 +10,8 @@ class Settings(BaseSettings):
 
     # model params
     TEMPERATURE: float = 0.1
-    MAX_TOKENS: int = 8192    
-    MODEL_NAME: str = "google/gemma-3n-E4B-it"
+    MAX_TOKENS: int = 8192
+    MODEL_NAME: str = "google/gemma-3-4b-it"
     EMBEDDINGS_MODEL: str = "intfloat/multilingual-e5-small"
 
     # rag
