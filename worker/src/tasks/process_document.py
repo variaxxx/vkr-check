@@ -18,6 +18,8 @@ from src.services.vkr_analyzer import VKRAnalyzer
 from src.services.vkr_report import VKRReport
 from src.services.pages_markup import MarkupPages
 from src.services.headers_classifier import HeaderClassifier
+from src.services.vkr_intro_checker import VKRIntroductionChecker
+from src.services.vkr_conclusion_checker import VKRConclusionChecker
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -45,6 +47,8 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     vkr_report: VKRReport = di.get(VKRReport)
     # sign_verify: MarkupPages = di.get(MarkupPages)
     header_classifier: HeaderClassifier = di.get(HeaderClassifier)
+    intro_checker = di.get(VKRIntroductionChecker)
+    conclusion_checker = di.get(VKRConclusionChecker)
 
     doc = db.get(Document, doc_id)
     if doc is None:
@@ -84,9 +88,34 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
                 {"task_point": point, "score": score, "justification": reason}
             )
 
+        intro_evaluations = []
+        intro_score, intro_report = intro_checker.evaluate(
+            vector_db,
+            total_doc_volume=len(raw_chunks)
+        )
+
+        conclusion_evaluations = []
+        conclusion_score, conclusion_report = conclusion_checker.evaluate(
+            vector_db,
+            is_collective=len(fio_list) > 1
+        )
+
+        intro_evaluations.append({
+            "section": "introduction",
+            "score": intro_score,
+            "details": intro_report
+        })
+
+        conclusion_evaluations.append({
+            "section": "conclusion",
+            "score": conclusion_score,
+            "details": conclusion_report
+        })
+
         info_data = {"students": fio_list, "theme": theme}
         report_json = vkr_report.generate_report(info_data, evaluations)
         report_dict = json.loads(report_json)
+
 
         for student in fio_list:
             parts = student.split()
