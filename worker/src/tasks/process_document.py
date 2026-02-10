@@ -11,7 +11,6 @@ from src.infra.db.models import Author, Document
 from src.infra.minio import MinioService
 from src.main import worker
 from src.services.info_parser import InfoParser
-# Теперь импортируем сервис-обертку
 from src.services.doc_processors import DocumentProcessorService 
 from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
@@ -44,7 +43,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     rag_engine: RAGEngine = di.get(RAGEngine)
     vkr_analyzer: VKRAnalyzer = di.get(VKRAnalyzer)
     vkr_report: VKRReport = di.get(VKRReport)
-    sign_verify: MarkupPages = di.get(MarkupPages)
+    # sign_verify: MarkupPages = di.get(MarkupPages)
     header_classifier: HeaderClassifier = di.get(HeaderClassifier)
 
     doc = db.get(Document, doc_id)
@@ -63,13 +62,16 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         file_response = minio.client.get_object(bucket_name, object_name)
         file_buffer = io.BytesIO(file_response.read())
 
-        if doc_service.is_pdf():
-            if not sign_verify.markup_pdf(file_buffer):
-                raise Exception("Верификация подписей не прошла")
+        # if doc_service.is_pdf():
+        #     if not sign_verify.markup_pdf(file_buffer):
+        #         raise Exception("Верификация подписей не прошла")
 
         task_points = task_parser.get_task_points(file_buffer)
+        file_buffer.seek(0)
         fio_list = info_parser.get_fio(file_buffer)
+        file_buffer.seek(0)
         theme = info_parser.get_theme(file_buffer)
+        file_buffer.seek(0)
 
         raw_chunks = doc_service.get_structured_text(file_buffer)
         classified_chunks = header_classifier.classify_headers(raw_chunks)
@@ -77,7 +79,6 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
         evaluations = []
         for point in task_points:
-            print(point)
             score, reason = vkr_analyzer.evaluate_point(point, vector_db)
             evaluations.append(
                 {"task_point": point, "score": score, "justification": reason}
@@ -100,6 +101,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         doc.score = report_dict["summary"].get("average_score", 0)
         doc.topic = theme if isinstance(theme, str) else (theme[0] if theme else "")
         doc.status = DocumentStatus.SUCCESS
+        doc.result = report_json
         db.commit()
 
     except Exception as e:

@@ -6,7 +6,6 @@ from typing import List, Dict
 
 import pymupdf4llm
 from pdf2image import convert_from_bytes
-from docx2pdf import convert as docx_to_pdf
 
 import re
 
@@ -93,7 +92,7 @@ class PDFProcessor(BaseProcessor):
             pdf_file.read(),
             first_page=first_page,
             last_page=last_page,
-            dpi=200 
+            dpi=130 
         )
         encoded = []
         for img in images:

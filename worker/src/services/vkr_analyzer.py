@@ -44,7 +44,6 @@ class VKRAnalyzer:
         ])
 
         llm = self.llm_service.get_llm()
-
         chain = prompt | llm.bind(max_tokens=512, temperature=0) | StrOutputParser()
         
         try:

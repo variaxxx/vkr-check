@@ -6,10 +6,14 @@ import sys
 import os
 from contextlib import contextmanager
 from io import BytesIO
+import io
 import base64
 
 from .doc_processors import DocumentProcessorService
 from .llm_service import LLMService
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(CURRENT_DIR, "yolov8s.pt")
 
 
 def base64_to_image(base64_str: str) -> Image:
@@ -21,8 +25,8 @@ class MarkupPages:
     def __init__(self, llm_service: LLMService, doc_processor: DocumentProcessorService):
         self.llm_service = llm_service
         self.doc_processor = doc_processor
-        self.verbose = verbose
-        self.model = YOLO(".yolov8s.pt", verbose=False)
+        self.verbose = False
+        self.model = YOLO(MODEL_PATH, verbose=False)
 
     def sign_detect(self, image: Image, threshold: float = 0.3) -> bool:
         """
@@ -58,7 +62,7 @@ class MarkupPages:
 
         pages = self.doc_processor.get_pages_as_base64(pdf_bytes)
         pages_images = [base64_to_image(page) for page in pages]
-        pages_indeces = [i for i, page in enumerate(pages_images) if sign_detect(page)]
+        pages_indeces = [i for i, page in enumerate(pages_images) if self.sign_detect(page)]
         pages_markup = [pages[i] for i in pages_indeces]
         count = len(pages_indeces)
         if count == 0:

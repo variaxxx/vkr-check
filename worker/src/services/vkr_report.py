@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 class VKRReport:
     """Генератор отчетов в формате JSON"""
-
+    @staticmethod
     def generate_report(info: dict, evaluations: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Генерирует структуру отчета"""
         total_scores = [e["score"] for e in evaluations]
