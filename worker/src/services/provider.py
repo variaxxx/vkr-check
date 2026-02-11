@@ -1,5 +1,6 @@
 from dishka import Provider, Scope, provide
 
+from src.services.application_check import ApplicationChecker
 from src.services.doc_processors import (
     DocumentProcessorService,
     DOCXProcessor,
@@ -7,6 +8,7 @@ from src.services.doc_processors import (
 )
 from src.services.headers_classifier import HeaderClassifier
 from src.services.info_parser import InfoParser
+from src.services.literature_check import LiteratureChecker
 from src.services.llm_service import LLMService
 from src.services.pages_markup import MarkupPages
 from src.services.rag import RAGEngine
@@ -39,3 +41,5 @@ class ServicesProvider(Provider):
     intro_checker = provide(VKRIntroductionChecker, scope=Scope.APP)
     conclusion_checker = provide(VKRConclusionChecker, scope=Scope.APP)
     sign_detection = provide(MarkupPages, scope=Scope.APP)
+    application_checker = provide(ApplicationChecker, scope=Scope.APP)
+    literature_checker = provide(LiteratureChecker, scope=Scope.APP)

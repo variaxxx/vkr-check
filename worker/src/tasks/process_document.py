@@ -10,9 +10,12 @@ from src.core.di import run_in_di
 from src.infra.db.models import Author, Document
 from src.infra.minio import MinioService
 from src.main import worker
+from src.services import application_check, literature_check
+from src.services.application_check import ApplicationChecker
 from src.services.doc_processors import DocumentProcessorService
 from src.services.headers_classifier import HeaderClassifier
 from src.services.info_parser import InfoParser
+from src.services.literature_check import LiteratureChecker
 from src.services.pages_markup import MarkupPages
 from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
@@ -50,6 +53,8 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     header_classifier: HeaderClassifier = di.get(HeaderClassifier)
     intro_checker = di.get(VKRIntroductionChecker)
     conclusion_checker = di.get(VKRConclusionChecker)
+    application_checker = di.get(ApplicationChecker)
+    literature_checker = di.get(LiteratureChecker)
 
     doc = db.get(Document, doc_id)
     if doc is None:
@@ -66,12 +71,13 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
         file_response = minio.client.get_object(bucket_name, object_name)
         file_buffer = io.BytesIO(file_response.read())
-        status: bool = False
 
+        status: bool = False
         if doc_service.is_pdf():
             status = sign_verify.markup_pdf(file_buffer)
         signs_verification = []
         signs_verification.append({"signs_status_code": status})
+        print("sign_verify_status: ", status)
 
         task_points = task_parser.get_task_points(file_buffer)
         file_buffer.seek(0)
@@ -90,6 +96,35 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             evaluations.append(
                 {"task_point": point, "score": score, "justification": reason}
             )
+
+        application_evaluations = []
+        application_status, application_report = application_checker.evaluate(
+            vector_db
+        )
+
+        literature_evaluations = []
+        literature_status, links_status, literature_report = (
+            literature_checker.evaluate(vector_db, raw_chunks)
+        )
+        print("status_literature_status:", literature_status)
+        print("status_literature_links:", links_status)
+        print("application_status:", application_status)
+        application_evaluations.append(
+            {
+                "section": "application",
+                "score": application_status,
+                "details": application_report,
+            }
+        )
+
+        literature_evaluations.append(
+            {
+                "section": "literature",
+                "score": literature_status,
+                "if_links_exists": links_status,
+                "details": literature_report,
+            }
+        )
 
         intro_evaluations = []
         intro_score, intro_report = intro_checker.evaluate(

@@ -1,9 +1,9 @@
 import re
 from typing import Tuple
 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import FAISS
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 
 from .llm_service import LLMService
 from .rag import RAGEngine
@@ -14,7 +14,9 @@ class VKRConclusionChecker:
         self.llm = llm_service.get_llm()
         self.rag_engine = rag_engine
 
-    def evaluate(self, vector_db: FAISS, is_collective: bool = False) -> Tuple[int, str]:
+    def evaluate(
+        self, vector_db: FAISS, is_collective: bool = False
+    ) -> Tuple[int, str]:
         """
         Проверяет заключение ВКР
         """
@@ -22,26 +24,32 @@ class VKRConclusionChecker:
         docs = self.rag_engine.retrieve_relevant_chunks(
             vector_db,
             query="Заключение результаты практическая значимость внедрение развитие",
-            categories=["conclusion"]
+            categories=["conclusion"],
         )
 
         context = self.rag_engine.get_context_from_docs(docs)
 
         collective_note = (
             "4. Для коллективных ВКР, должны быть описаны результаты, полученные каждым автором самостоятельно."
-            if is_collective else
-            "Работа не является коллективной."
+            if is_collective
+            else "Работа не является коллективной."
         )
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    """
 Ты — эксперт по проверке заключений ВКР.
 Проверяй строго по методическим указаниям.
 Если пункт отсутствует - это нарушение.
 Не додумывай за автора.
 Отвечай строго по шаблону.
-"""),
-            ("user", f"""
+""",
+                ),
+                (
+                    "user",
+                    f"""
 Текст заключения:
 {{context}}
 
@@ -61,10 +69,16 @@ class VKRConclusionChecker:
 - ...
 - ...
 Обоснование: [2–3 предложения]
-""")
-        ])
+""",
+                ),
+            ]
+        )
 
-        chain = prompt | self.llm.bind(max_tokens=600, temperature=0) | StrOutputParser()
+        chain = (
+            prompt
+            | self.llm.bind(max_tokens=600, temperature=0)
+            | StrOutputParser()
+        )
         result = chain.invoke({"context": context})
         return self._parse_result(result)
 

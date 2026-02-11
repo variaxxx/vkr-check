@@ -1,10 +1,7 @@
 import base64
 import io
 import os
-import sys
-from contextlib import contextmanager
 from io import BytesIO
-from typing import List, Tuple
 
 import supervision as sv
 from PIL import Image as PILImage
@@ -17,9 +14,9 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(CURRENT_DIR, "yolov8s.pt")
 
 
-def base64_to_image(base64_str: str) -> PILImage:
+def base64_to_image(base64_str: str) -> PILImage.Image:
     image_bytes = base64.b64decode(base64_str)
-    image = PILImage.open(BytesIO(image_bytes))
+    image: PILImage.Image = PILImage.open(BytesIO(image_bytes))
     return image
 
 
@@ -32,7 +29,9 @@ class MarkupPages:
         self.verbose = False
         self.model = YOLO(MODEL_PATH, verbose=False)
 
-    def sign_detect(self, image: PILImage, threshold: float = 0.3) -> bool:
+    def sign_detect(
+        self, image: PILImage.Image, threshold: float = 0.3
+    ) -> bool:
         """
         Детектит,есть ли подписи на изображении.
 
