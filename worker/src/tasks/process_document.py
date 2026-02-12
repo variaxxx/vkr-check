@@ -1,7 +1,7 @@
 import io
 import json
 import uuid
-from typing import Union
+from typing import List, Union
 
 from sqlalchemy.orm import Session
 
@@ -10,7 +10,6 @@ from src.core.di import run_in_di
 from src.infra.db.models import Author, Document
 from src.infra.minio import MinioService
 from src.main import worker
-from src.services import application_check, literature_check
 from src.services.application_check import ApplicationChecker
 from src.services.doc_processors import DocumentProcessorService
 from src.services.headers_classifier import HeaderClassifier
@@ -73,42 +72,46 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         file_buffer = io.BytesIO(file_response.read())
 
         status: bool = False
+        txt: List[str] = []
         if doc_service.is_pdf():
-            status = sign_verify.markup_pdf(file_buffer)
+            status, txt = sign_verify.markup_pdf(file_buffer)
         signs_verification = []
         signs_verification.append({"signs_status_code": status})
-        print("sign_verify_status: ", status)
-
+        print("sign_verify_status: ", txt)
+        print("Processing task_points")
         task_points = task_parser.get_task_points(file_buffer)
         file_buffer.seek(0)
+        print("Processing fio_list")
         fio_list = info_parser.get_fio(file_buffer)
         file_buffer.seek(0)
+        print("Processing task_theme")
         theme = info_parser.get_theme(file_buffer)
         file_buffer.seek(0)
-
+        print("Processing chunks\n")
         raw_chunks = doc_service.get_structured_text(file_buffer)
         classified_chunks = header_classifier.classify_headers(raw_chunks)
         vector_db = rag_engine.create_vector_db(classified_chunks)
 
+        print("Processing evaluations\n")
         evaluations = []
         for point in task_points:
             score, reason = vkr_analyzer.evaluate_point(point, vector_db)
             evaluations.append(
                 {"task_point": point, "score": score, "justification": reason}
             )
-
+        print("Processing application\n")
         application_evaluations = []
         application_status, application_report = application_checker.evaluate(
             vector_db
         )
-
+        print("Processing literature\n")
         literature_evaluations = []
         literature_status, links_status, literature_report = (
             literature_checker.evaluate(vector_db, raw_chunks)
         )
-        print("status_literature_status:", literature_status)
+        print("status_literature_status:", literature_report)
         print("status_literature_links:", links_status)
-        print("application_status:", application_status)
+        print("application_status:", application_report)
         application_evaluations.append(
             {
                 "section": "application",

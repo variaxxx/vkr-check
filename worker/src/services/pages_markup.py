@@ -2,6 +2,7 @@ import base64
 import io
 import os
 from io import BytesIO
+from typing import List, Tuple
 
 import supervision as sv
 from PIL import Image as PILImage
@@ -60,7 +61,7 @@ class MarkupPages:
         ]
         return len(detections_list) > 0
 
-    def markup_pdf(self, pdf_bytes: io.BytesIO) -> bool:
+    def markup_pdf(self, pdf_bytes: io.BytesIO) -> Tuple[bool, List[str]]:
         """
         Определяет везде ли есть подписи на изображении.
         return: bool
@@ -76,12 +77,13 @@ class MarkupPages:
         if count == 0:
             return False
         c: int = 0
+        ans: List[str] = []
         for b64 in pages_markup:
             content = [
                 {
                     "type": "text",
-                    "text": "Определи, везде ли на этом изображении проставлены подписи? Ответь '1', "
-                    "если проставлены все подписи, либо '0', если не все подписи проставлены. "
+                    "text": "Определи, везде ли на этом изображении проставлены подписи рядом с фамилиями? Ответь '1', "
+                    "если проставлены все подписи(блок без фамилии не считается за отсутствие подписи), либо '0', если не все подписи проставлены. "
                     "Важно: Каждая подпись должна соотвествовать фамилии, если пустой блок без фамилии, то это НЕ считается отсутствием подписи.",
                 },
                 {
@@ -90,7 +92,8 @@ class MarkupPages:
                 },
             ]
             answer = self.llm_service.invoke_vision(content)
-            if answer == "1":
+            ans.append(answer)
+            if "1" in answer:
                 c += 1
 
-        return count == c
+        return count == c, ans

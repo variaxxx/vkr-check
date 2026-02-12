@@ -2,7 +2,7 @@ import re
 from email.charset import Charset
 from typing import Tuple
 
-from langchain.community.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 

@@ -1,7 +1,7 @@
 import re
 from typing import Dict, List, Tuple
 
-from langchain.community.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -19,6 +19,7 @@ class LiteratureChecker:
         counter: int = 0
         for _, chunk in enumerate(raw_chunks):
             text = chunk.get("text", "")
+            print(text)
             links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text)
             counter += len(links)
         return counter > 0
@@ -29,7 +30,7 @@ class LiteratureChecker:
         """
         Проверяет правильность списка литературы
         """
-
+        print(raw_chunks[-5:])
         docs = self.rag_engine.retrieve_relevant_chunks(
             vector_db=vector_db,
             query="Список литературы литература ссылки источники",
@@ -77,7 +78,7 @@ class LiteratureChecker:
 
         result = chain.invoke()
 
-        links_status = bool(raw_chunks)
+        links_status = bool(self._check_links(raw_chunks))
 
         return self._parse_result(result, links_status)
 
