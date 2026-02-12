@@ -22,7 +22,8 @@ class VKRIntroductionChecker:
         docs = self.rag_engine.retrieve_relevant_chunks(
             vector_db,
             query="Введение цели задачи актуальность новизна результаты",
-            categories=["intro"]
+            categories=["intro"],
+            k=10
         )
 
         context = self.rag_engine.get_context_from_docs(docs)

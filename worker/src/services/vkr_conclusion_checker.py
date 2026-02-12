@@ -25,6 +25,7 @@ class VKRConclusionChecker:
             vector_db,
             query="Заключение результаты практическая значимость внедрение развитие",
             categories=["conclusion"],
+            k=10
         )
 
         context = self.rag_engine.get_context_from_docs(docs)

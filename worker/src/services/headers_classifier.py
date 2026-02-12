@@ -16,10 +16,11 @@ class HeaderClassifier:
         Категории:
         - 'annotation_ru': Аннотация на русском
         - 'annotation_en': Abstract / Annotation на английском
-        - 'intro': Введение
+        - 'intro': Введение, акутальность, целиб задачи
         - 'main': Главы, параграфы, основная часть
-        - 'conclusion': Заключение, выводы
-        - 'biblio': Список литературы
+        - 'conclusion': Заключение, выводы, результаты
+        - 'biblio': Список литературы, список использованной литературы
+        - 'application': Приложение к документу
         - 'garbage': Технический мусор (ФИО, город, год, стр. №, кафедры)
 
         Правила: 
@@ -37,6 +38,8 @@ class HeaderClassifier:
 
         try:
             response = self.llm.invoke(messages)
+            print(response)
+            print(response.content)
             clean_json = re.sub(r'```json|```', '', response.content).strip()
             mapping = json.loads(clean_json)
             return self._build_final_structure(extracted_chunks, mapping)
