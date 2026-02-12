@@ -35,7 +35,7 @@ class LiteratureChecker:
             vector_db=vector_db,
             query="Список литературы литература ссылки источники",
             k=3,
-            categories=["literature"],
+            categories=["biblio"],
         )
 
         if not docs:
