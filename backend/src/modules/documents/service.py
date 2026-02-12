@@ -119,7 +119,7 @@ class DocumentService:
     ) -> DocumentResponse:
         doc = await self.doc_repo.get_by_id(id=document_id)
 
-        if doc is None or doc.user_id != user.id:
+        if doc is None or str(doc.user_id) != str(user.id):
             raise HTTPException(404, "Document not found")
 
         return self._to_response(doc)
