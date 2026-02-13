@@ -1,0 +1,38 @@
+<div class="overflow-x-auto border-2 border-neutral-200 rounded-xl h-full bg-white">
+  <div class="h-full flex flex-col justify-between">
+    <table class="w-full">
+      <thead class="bg-neutral-100 h-fit">
+        <tr>
+          @for (col of evaluationColumns; track $index) {
+            <th
+            class="px-6 py-3 text-xs font-medium text-neutral-500 uppercase text-left tracking-wider"
+            >{{ col }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody class="divide-neutral-200 divide-y">
+        @for (e of evaluations(); track $index) {
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex gap-2 items-center">
+                <span class="font-medium text-sm text-neutral-900">{{ evaluationSectionsMap[e.section] }}</span>
+              </div>
+            </td>
+
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex gap-2 items-center">
+                <span class="text-sm text-neutral-900">{{ e.score }} / 10</span>
+              </div>
+            </td>
+
+            <td class="px-6 py-4">
+              <div class="flex gap-2 items-center">
+                <span class="text-sm text-neutral-900 min-w-2xs">{{ e.details }}</span>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

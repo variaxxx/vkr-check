@@ -1,13 +1,14 @@
-import { FindManyApiReponse } from "../../../../core/interfaces";
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { RouterLink } from "@angular/router";
+import { tap } from "rxjs";
+
+import { FindManyApiResponse } from "../../../../core/interfaces";
 import { DocumentService } from "../../../../core/services";
 import { Icon } from "../../../../shared/components/icon/icon";
 import { DocumentShortResponse } from "../../../documents/dto";
 import { RecentDocsListItem } from "./recent-docs-list-item/recent-docs-list-item";
 import { RecentDocsListSkeletonItem } from "./recent-docs-list-skeleton-item/recent-docs-list-skeleton-item";
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { RouterLink } from "@angular/router";
-import { tap } from "rxjs";
 
 @Component({
   selector: "app-recent-docs-list",
@@ -21,7 +22,7 @@ export class RecentDocsList implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   protected docsState = signal<{
-    data: FindManyApiReponse<DocumentShortResponse> | null;
+    data: FindManyApiResponse<DocumentShortResponse> | null;
     isLoading: boolean;
   }>({
     data: null,

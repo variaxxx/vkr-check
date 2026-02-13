@@ -1,10 +1,11 @@
-import { Button } from "../../../../shared/components/button/button";
-import { Icon } from "../../../../shared/components/icon/icon";
-import { FilesListItem } from "./files-list-item/files-list-item";
 import { AsyncPipe } from "@angular/common";
 import { ChangeDetectionStrategy, Component, input, OnInit, output } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { Observable, startWith } from "rxjs";
+
+import { Button } from "../../../../shared/components/button/button";
+import { Icon } from "../../../../shared/components/icon/icon";
+import { FilesListItem } from "./files-list-item/files-list-item";
 
 @Component({
   selector: "app-files-list",

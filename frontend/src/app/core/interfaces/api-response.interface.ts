@@ -4,7 +4,7 @@ export interface ApiResponse<T = any> {
   data: T | null;
 }
 
-export interface FindManyApiReponse<T = any> {
+export interface FindManyApiResponse<T = any> {
   total: number;
   count: number;
   items: T[];

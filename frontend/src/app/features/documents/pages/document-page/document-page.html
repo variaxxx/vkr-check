@@ -1,0 +1,74 @@
+<div class="flex flex-col h-full">
+  <div class="flex gap-3 items-center mb-6">
+    <button
+      class="min-h-8 min-w-8 p-2 hover:bg-neutral-200 cursor-pointer transition-colors rounded-md"
+      (click)="back()"
+      >
+      <app-icon icon="chevron-left"></app-icon>
+    </button>
+
+    <h2 class="text-2xl font-bold text-neutral-900">Информация о работе</h2>
+  </div>
+
+  <div class="rounded-xl bg-white border-2 border-neutral-200 divide-y divide-neutral-200">
+    @if (document(); as doc) {
+      <div class="p-6 flex max-md:flex-col items-center max-md:items-start justify-between gap-4 w-full">
+        <div class="flex-col items-start min-w-0 flex-1 w-full">
+          <h3 class="text-xl font-medium text-neutral-900 mb-2 break-all md:truncate">{{ doc.original_name }}</h3>
+          <div class="flex max-sm:flex-col max-sm:items-start items-center gap-3">
+            <app-document-status-plate [status]="doc.status"></app-document-status-plate>
+            <span class="text-neutral-500 text-sm text-nowrap">
+              Загружен: {{ doc.created_at | date:'dd/MM/yyyy, HH:mm' }}
+            </span>
+          </div>
+        </div>
+
+        <a
+          (click)="download($event, doc.id, doc.original_name)"
+          class="flex gap-1 text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 transition-colors rounded-lg cursor-pointer w-fit text-sm"
+          >
+          <app-icon icon="download" class="w-5 h-5"></app-icon>
+          Скачать
+        </a>
+      </div>
+
+      @if (doc.status === "success") {
+        <div class="flex flex-col gap-6 p-6">
+          <div>
+            <h4 class="text-sm font-medium uppercase text-neutral-500 tracking-wider mb-2">Авторы</h4>
+            @for (author of doc.authors; track $index) {
+              <p class="text-neutral-900">{{ author }}</p>
+            }
+          </div>
+
+          <div>
+            <h4 class="text-sm font-medium uppercase text-neutral-500 tracking-wider mb-2">Тема</h4>
+            <p class="text-neutral-900">{{ doc.topic }}</p>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-medium uppercase text-neutral-500 tracking-wider mb-2">Итоговая оценка</h4>
+            <div class="flex items-center gap-2">
+              <p class="text-3xl font-bold text-neutral-900">{{ doc.result!.summary.average_score }}</p>
+              <p class="text-neutral-500">баллов</p>
+            </div>
+          </div>
+        </div>
+      } @else {
+
+      }
+    } @else {
+
+    }
+  </div>
+
+  @if (document()?.result?.evaluations ; as evals) {
+    <h3 class="text-xl font-bold text-neutral-900 mt-6 mb-3 px-4">Оценка структуры</h3>
+    <app-evaluations-list [evaluations]="evals"></app-evaluations-list>
+  }
+
+  @if (document()?.result?.analysis; as analysisPoints) {
+    <h3 class="text-xl font-bold text-neutral-900 mt-6 mb-3 px-4">Соответствие заданию</h3>
+    <app-analysis-list [analysisPoints]="analysisPoints"></app-analysis-list>
+  }
+</div>

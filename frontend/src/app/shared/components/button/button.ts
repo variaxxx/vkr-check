@@ -1,5 +1,6 @@
-import { ButtonPriority, ButtonSize, ButtonType } from "./button.types";
 import { ChangeDetectionStrategy, Component, input } from "@angular/core";
+
+import { ButtonPriority, ButtonSize, ButtonType } from "./button.types";
 
 @Component({
   selector: "app-button",

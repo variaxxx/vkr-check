@@ -1,8 +1,9 @@
-import { iconsConfig } from "../../../app.icons";
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { Observable, tap, zip } from "rxjs";
+
+import { iconsConfig } from "../../../app.icons";
 
 export type IconsConfig = typeof iconsConfig;
 
@@ -33,7 +34,6 @@ export class IconService {
     return zip(
       config.icons.map(icon => this.registerIcon(icon)),
     ).pipe(tap(() => {
-      // eslint-disable-next-line no-console
       console.log("Icons initialized");
     }));
   }

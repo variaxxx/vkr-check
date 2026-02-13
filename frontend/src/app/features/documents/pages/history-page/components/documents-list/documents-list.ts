@@ -1,13 +1,14 @@
-import { env } from "../../../../../environments/environment";
-import { DocumentStatusPlate } from "../../../../shared/components/document-status-plate/document-status-plate";
-import { Icon } from "../../../../shared/components/icon/icon";
-import { DocumentShortResponse } from "../../../documents/dto";
 import { DatePipe } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { DocumentStatusPlate } from "@shared/components/document-status-plate/document-status-plate";
+import { Icon } from "@shared/components/icon/icon";
 import { NgxSkeletonLoaderComponent } from "ngx-skeleton-loader";
 import { tap } from "rxjs";
+
+import { env } from "../../../../../../../environments/environment";
+import { DocumentShortResponse } from "../../../../dto";
 
 @Component({
   selector: "app-documents-list",

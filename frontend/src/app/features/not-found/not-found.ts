@@ -1,6 +1,7 @@
-import { Button } from "../../shared/components/button/button";
 import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { RouterLink } from "@angular/router";
+
+import { Button } from "../../shared/components/button/button";
 
 @Component({
   selector: "app-not-found",

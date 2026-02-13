@@ -1,10 +1,11 @@
-import { env } from "../../../environments/environment";
-import { DocumentShortResponse } from "../../features/documents/dto";
-import { DocumentStatus } from "../../shared/enums";
-import { FindManyApiReponse } from "../interfaces";
 import { HttpClient, HttpEventType, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { map, Observable, startWith, Subject, switchMap } from "rxjs";
+import { map, Observable, startWith, Subject, switchMap, tap } from "rxjs";
+
+import { env } from "../../../environments/environment";
+import { DocumentResponse, DocumentShortResponse } from "../../features/documents/dto";
+import { DocumentStatus } from "../../shared/enums";
+import { FindManyApiResponse } from "../interfaces";
 
 export interface UploadingProgress {
   progress: number;
@@ -25,11 +26,17 @@ export class DocumentService {
 
   public getRecent(
     limit: number = 5,
-  ): Observable<FindManyApiReponse<DocumentShortResponse>> {
+  ): Observable<FindManyApiResponse<DocumentShortResponse>> {
     return this.refresh$.pipe(
       startWith(void 0),
-      switchMap(() => this.getMany({ limit })),
+      switchMap(() => this.findMany({ limit })),
     );
+  }
+
+  public findById(
+    id: string,
+  ): Observable<DocumentResponse> {
+    return this.http.get<DocumentResponse>(`${env.API_BASE_URL}documents/${id}`);
   }
 
   public upload(docs: File[]): Observable<UploadingProgress> {
@@ -65,14 +72,14 @@ export class DocumentService {
     );
   }
 
-  public getMany(
+  public findMany(
     options: {
       limit?: number;
       offset?: number;
       status?: DocumentStatus;
       query?: string;
     },
-  ): Observable<FindManyApiReponse<DocumentShortResponse>> {
+  ): Observable<FindManyApiResponse<DocumentShortResponse>> {
     const { limit, offset, status, query } = options;
 
     const params = new HttpParams({
@@ -84,9 +91,31 @@ export class DocumentService {
       },
     });
 
-    return this.http.get<FindManyApiReponse<DocumentShortResponse>>(
+    return this.http.get<FindManyApiResponse<DocumentShortResponse>>(
       query ? `${env.API_BASE_URL}documents/search` : `${env.API_BASE_URL}documents`,
       { params },
+    );
+  }
+
+  public download(
+    documentId: string,
+    filename?: string,
+  ): Observable<any> {
+    return this.http.get(
+      `${env.API_BASE_URL}documents/${documentId}/download`,
+      { responseType: "blob" },
+    ).pipe(
+      tap((doc) => {
+        const url = URL.createObjectURL(doc);
+
+        const a = document.createElement("a");
+        a.href = url;
+        if (filename)
+          a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(url);
+      }),
     );
   }
 }

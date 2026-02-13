@@ -1,7 +1,8 @@
-import { NotificationService } from "../../../core/services";
-import { Notification } from "../notification/notification";
 import { AsyncPipe } from "@angular/common";
 import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
+
+import { NotificationService } from "../../../core/services";
+import { Notification } from "../notification/notification";
 
 @Component({
   selector: "app-notifications-stack",

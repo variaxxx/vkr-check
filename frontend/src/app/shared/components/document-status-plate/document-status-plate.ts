@@ -1,8 +1,9 @@
+import { NgClass } from "@angular/common";
+import { ChangeDetectionStrategy, Component, input } from "@angular/core";
+
 import { IconName } from "../../../app.icons";
 import { DOCUMENT_STATUS, DocumentStatus } from "../../enums";
 import { Icon } from "../icon/icon";
-import { NgClass } from "@angular/common";
-import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
 interface StatusConfig {
   icon: IconName;
