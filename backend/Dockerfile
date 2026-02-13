@@ -11,8 +11,7 @@ FROM base AS builder
 
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libpq-dev \ 
-    libreoffice
+    libpq-dev
 
 
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true
