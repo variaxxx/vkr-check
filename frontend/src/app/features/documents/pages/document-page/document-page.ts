@@ -6,7 +6,7 @@ import { DocumentService, NotificationService } from "@core/services";
 import { DocumentStatusPlate } from "@shared/components/document-status-plate/document-status-plate";
 import { Icon } from "@shared/components/icon/icon";
 import { NgxSkeletonLoaderModule } from "ngx-skeleton-loader";
-import { catchError, delay, of, tap, throwError } from "rxjs";
+import { catchError, of, tap, throwError } from "rxjs";
 
 import { DocumentResponse } from "../../dto";
 import { AnalysisList } from "./components/analysis-list/analysis-list";
@@ -52,7 +52,6 @@ export class DocumentPage implements OnInit {
     const docId = this.route.snapshot.params["docId"];
     this.docService.findById(docId).pipe(
       takeUntilDestroyed(this.destroyRef),
-      delay(1000),
       catchError((err) => {
         if (err.status === 404) {
           this.router.navigateByUrl("/");
