@@ -93,10 +93,10 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         vector_db = rag_engine.create_vector_db(classified_chunks)
 
         # Оценка ЗАДАНИЯ
-        evaluations = []
+        task_evaluations = []
         for point in task_points:
             score, reason = vkr_analyzer.evaluate_point(point, vector_db)
-            evaluations.append(
+            task_evaluations.append(
                 {"task_point": point, "score": score, "justification": reason}
             )
             
@@ -140,18 +140,18 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         )
 
         # ОТЧЕТ
+        evaluations = [
+            application_evaluations,
+            literature_evaluations,
+            intro_evaluations,
+            conclusion_evaluations
+        ]
+        
         info_data = {"students": fio_list, "theme": theme}
         report_dict: Dict[str, Any] = vkr_report.generate_report(
-            info_data, evaluations
+            info_data, task_evaluations, signs_verification, evaluations
         )
 
-        
-        report_dict["signs_verification"] = signs_verification
-        report_dict["evaluations"] = []
-        report_dict["evaluations"].append(application_evaluations)
-        report_dict["evaluations"].append(literature_evaluations)
-        report_dict["evaluations"].append(intro_evaluations)
-        report_dict["evaluations"].append(conclusion_evaluations)
         report_json_tmp = json.dumps(report_dict, ensure_ascii=True)
         report_json = json.loads(report_json_tmp)
 
