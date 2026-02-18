@@ -17,9 +17,9 @@ class LiteratureChecker:
     def _check_links(self, raw_chunks: List[Dict[str, str]]) -> bool:
         """Топорная логика на наличие ссылок в списке литературы"""
         counter: int = 0
+        # print(raw_chunks)
         for _, chunk in enumerate(raw_chunks):
             text = chunk.get("text", "")
-            print(text)
             links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text)
             counter += len(links)
         return counter > 0
@@ -30,7 +30,7 @@ class LiteratureChecker:
         """
         Проверяет правильность списка литературы
         """
-        print(raw_chunks[-5:])
+        # print(raw_chunks[-5:])
         docs = self.rag_engine.retrieve_relevant_chunks(
             vector_db=vector_db,
             query="Список литературы литература ссылки источники",

@@ -5,8 +5,11 @@ from typing import Any, Dict, List
 
 class VKRReport:
     """Генератор отчетов в формате JSON"""
+
     @staticmethod
-    def generate_report(info: dict, evaluations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate_report(
+        info: dict, evaluations: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Генерирует структуру отчета"""
         total_scores = [e["score"] for e in evaluations]
 
@@ -29,13 +32,4 @@ class VKRReport:
             "summary": summary,
         }
 
-        return json.dumps(report_data, ensure_ascii=False)
-
-    # @staticmethod
-    # def save_report(report_data: Dict[str, Any], filepath: str = None):
-    #     """Сохраняет отчет в JSON файл"""
-    #     if filepath is None:
-    #         filepath = config.Config.JSON_REPORT_PATH
-
-    #     with open(filepath, 'w', encoding='utf-8') as f:
-    #         json.dump(report_data, f, ensure_ascii=False, indent=4)
+        return report_data

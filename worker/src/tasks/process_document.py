@@ -1,7 +1,7 @@
 import io
 import json
 import uuid
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 from sqlalchemy.orm import Session
 
@@ -75,70 +75,52 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         txt: List[str] = []
         if doc_service.is_pdf():
             status, txt = sign_verify.markup_pdf(file_buffer)
-        signs_verification = []
-        signs_verification.append({"signs_status_code": status})
-        print("sign_verify_status: ", txt)
-        print("Processing task_points")
+
+        signs_verification = {"signs_status_code": status}
+
         task_points = task_parser.get_task_points(file_buffer)
         file_buffer.seek(0)
-        print("Processing fio_list")
+
         fio_list = info_parser.get_fio(file_buffer)
         file_buffer.seek(0)
-        print("Processing task_theme")
+
         theme = info_parser.get_theme(file_buffer)
         file_buffer.seek(0)
-        print("Processing chunks\n")
+
         raw_chunks = doc_service.get_structured_text(file_buffer)
         classified_chunks = header_classifier.classify_headers(raw_chunks)
         vector_db = rag_engine.create_vector_db(classified_chunks)
 
-        print("Processing evaluations\n")
         evaluations = []
         for point in task_points:
             score, reason = vkr_analyzer.evaluate_point(point, vector_db)
             evaluations.append(
                 {"task_point": point, "score": score, "justification": reason}
             )
-        print("Processing application\n")
-        application_evaluations = []
+
         application_status, application_report = application_checker.evaluate(
             vector_db
         )
-        print("Processing literature\n")
-        literature_evaluations = []
+        application_evaluations = {
+            "section": "application",
+            "score": application_status,
+            "details": application_report,
+        }
+
         literature_status, links_status, literature_report = (
             literature_checker.evaluate(vector_db, raw_chunks)
         )
-        print("status_literature_status:", literature_report)
-        print("status_literature_links:", links_status)
-        print("application_status:", application_report)
-        application_evaluations.append(
-            {
-                "section": "application",
-                "score": application_status,
-                "details": application_report,
-            }
-        )
-
-        literature_evaluations.append(
-            {
-                "section": "literature",
-                "score": literature_status,
-                "if_links_exists": links_status,
-                "details": literature_report,
-            }
-        )
+        literature_evaluations = {
+            "section": "literature",
+            "score": literature_status,
+            "if_links_exists": links_status,
+            "details": literature_report,
+        }
 
         intro_evaluations = []
         intro_score, intro_report = intro_checker.evaluate(
             vector_db, total_doc_volume=len(raw_chunks)
         )
-
-        conclusion_evaluations = []
-        conclusion_score, conclusion_report = conclusion_checker.evaluate(
-            vector_db, is_collective=len(fio_list) > 1
-        )
-
         intro_evaluations.append(
             {
                 "section": "introduction",
@@ -147,17 +129,28 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             }
         )
 
-        conclusion_evaluations.append(
-            {
-                "section": "conclusion",
-                "score": conclusion_score,
-                "details": conclusion_report,
-            }
+        conclusion_score, conclusion_report = conclusion_checker.evaluate(
+            vector_db, is_collective=len(fio_list) > 1
         )
+        conclusion_evaluations = {
+            "section": "conclusion",
+            "score": conclusion_score,
+            "details": conclusion_report,
+        }
 
         info_data = {"students": fio_list, "theme": theme}
-        report_json = vkr_report.generate_report(info_data, evaluations)
-        report_dict = json.loads(report_json)
+        report_dict: Dict[str, Any] = vkr_report.generate_report(
+            info_data, evaluations
+        )
+
+        report_dict["signs_verification"] = signs_verification
+        report_dict["evaluations"] = []
+        report_dict["evaluations"].append(application_evaluations)
+        report_dict["evaluations"].append(literature_evaluations)
+        report_dict["evaluations"].append(intro_evaluations)
+        report_dict["evaluations"].append(conclusion_evaluations)
+        report_json_tmp = json.dumps(report_dict, ensure_ascii=True)
+        report_json = json.loads(report_json_tmp)
 
         for student in fio_list:
             parts = student.split()
