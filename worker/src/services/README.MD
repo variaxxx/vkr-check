@@ -4,7 +4,7 @@ pkill -9 python
 pkill -9 vllm
 nvidia-smi
 
-export HF_TOKEN=<token>
+export HF_TOKEN=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
 export VLLM_LOGGING_LEVEL=INFO
 
 vllm serve google/gemma-3n-E4B-it \

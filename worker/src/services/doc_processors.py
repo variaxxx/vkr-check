@@ -19,6 +19,7 @@ class BaseProcessor:
         "ЗАКЛЮЧЕНИЕ",
         "СПИСОК ЛИТЕРАТУРЫ",
         "СОДЕРЖАНИЕ",
+        'ПРИЛОЖЕНИЕ'
     }
     TITLE_NOISE = {
         "МОСКВА",
@@ -47,30 +48,35 @@ class BaseProcessor:
             return None
 
         raw_title = None
+        
+        # 1. Сначала проверяем, есть ли Markdown заголовок (#)
         md_match = re.match(r"^#+\s+(.*)", line)
         if md_match:
             raw_title = md_match.group(1)
+        # 2. Если решетки нет, проверяем, не вся ли строка жирная
         else:
             bold_match = re.match(r"^[*_]+(.+?)[*_]+$", line)
             if bold_match:
                 raw_title = bold_match.group(1)
 
         if raw_title:
+            # ОЧИСТКА: Убираем оставшиеся звезды/решетки внутри (например, из # **ЗАГОЛОВОК**)
             clean_title = BaseProcessor._final_clean(raw_title)
             upper_title = clean_title.upper()
 
             # ФИЛЬТРАЦИЯ
-            # Если это мусор с титульника
             if any(noise in upper_title for noise in BaseProcessor.TITLE_NOISE):
                 return None
-            # Если заголовок слишком длинный или короткий или это предложение (точка в конце)
+            
+            # Проверка длины и точки (точка в конце часто признак обычного предложения)
             if (
-                len(clean_title) < 4
-                or len(clean_title) > 150
+                len(clean_title) < 3 # Сократил до 3, чтобы "П-1" или подобные влезали
+                or len(clean_title) > 200 # Чуть расширил лимит
                 or clean_title.endswith(".")
             ):
                 return None
-            # Если это просто жирный текст (маленькая буква в начале и нет цифр)
+                
+            # Валидация: начинается с заглавной или цифры
             if not clean_title[0].isdigit() and not clean_title[0].isupper():
                 return None
 
@@ -81,28 +87,42 @@ class BaseProcessor:
     def _split_markdown_by_headers(md_text: str) -> List[Dict[str, str]]:
         lines = md_text.split("\n")
         chunks = []
+        
         current_header = "Титульный лист"
         current_content = []
 
-        def save_chunk(content, header):
-            raw_text = "\n".join(content).strip()
-
+        def get_clean_text(content_list):
+            raw_text = "\n".join(content_list).strip()
+            # Удаляем номера страниц (одинокие цифры на строке)
             clean_text = re.sub(r"^\d+\s*$", "", raw_text, flags=re.MULTILINE)
-            clean_text = re.sub(r"\n{3,}", "\n\n", clean_text).strip()
-
-            if clean_text and len(clean_text) > 15:
-                chunks.append({"header": header, "text": clean_text})
+            # Схлопываем лишние переносы
+            return re.sub(r"\n{3,}", "\n\n", clean_text).strip()
 
         for line in lines:
             new_header = BaseProcessor._get_header_title(line)
+            
             if new_header:
-                save_chunk(current_content, current_header)
-                current_content = []
-                current_header = new_header
+                text_before = get_clean_text(current_content)
+                
+                # ЛОГИКА СКЛЕЙКИ:
+                # Если под текущим заголовком пусто И это не титульник — клеим к заголовку
+                if not text_before and current_header != "Титульный лист":
+                    current_header = f"{current_header} {new_header}"
+                else:
+                    # Если текст был, сохраняем старый чанк и начинаем новый
+                    if text_before or current_header != "Титульный лист":
+                        chunks.append({"header": current_header, "text": text_before})
+                    
+                    current_header = new_header
+                    current_content = []
             else:
                 current_content.append(line)
 
-        save_chunk(current_content, current_header)
+        # Сохраняем последний кусок
+        last_text = get_clean_text(current_content)
+        if last_text or current_header != "Титульный лист":
+            chunks.append({"header": current_header, "text": last_text})
+
         return chunks
 
 
@@ -124,7 +144,6 @@ class PDFProcessor(BaseProcessor):
 
     @staticmethod
     def get_structured_text(pdf_file: io.BytesIO) -> List[Dict[str, str]]:
-        # вот тут косяк может быть, pymupdf4llm вроде не читает байты
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp.write(pdf_file.getvalue())
             tmp_path = tmp.name

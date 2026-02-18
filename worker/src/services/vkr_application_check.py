@@ -36,12 +36,8 @@ class ApplicationChecker:
                 (
                     "system",
                     """Проверь приложение на
-                    соответствие следующим требованиям:
-1.	Проверка оформления приложений
-	•	новая страница
-	•	слово «Приложение»
-	•	заголовок
-2.В приложение не включается список использованной литературы,
+соответствие следующим требованиям:
+В приложение не включается список использованной литературы,
 справочные комментарии и примечания, которые являются не приложениями
 к основному тексту, а элементами справочно-сопроводительного аппарата работы,
 помогающими пользоваться ее основным текстом.
@@ -67,11 +63,11 @@ class ApplicationChecker:
             | StrOutputParser()
         )
 
-        result = chain.invoke()
+        result = chain.invoke({"context": context})
 
         return self._parse_result(result)
 
     def _parse_result(self, result: str) -> Tuple[int, str]:
         score_match = re.search(r"Статус: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
-        return score, result
+        return score, result, {}

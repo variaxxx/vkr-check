@@ -86,4 +86,4 @@ class VKRConclusionChecker:
     def _parse_result(self, text: str) -> Tuple[int, str]:
         score_match = re.search(r"Балл:\s*(\d+)", text)
         score = int(score_match.group(1)) if score_match else 0
-        return score, text
+        return score, text, {}

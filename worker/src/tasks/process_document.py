@@ -10,11 +10,11 @@ from src.core.di import run_in_di
 from src.infra.db.models import Author, Document
 from src.infra.minio import MinioService
 from src.main import worker
-from src.services.application_check import ApplicationChecker
+from src.services.vkr_application_check import ApplicationChecker
 from src.services.doc_processors import DocumentProcessorService
 from src.services.headers_classifier import HeaderClassifier
 from src.services.info_parser import InfoParser
-from src.services.literature_check import LiteratureChecker
+from src.services.vkr_literature_check import LiteratureChecker
 from src.services.pages_markup import MarkupPages
 from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
@@ -22,6 +22,7 @@ from src.services.vkr_analyzer import VKRAnalyzer
 from src.services.vkr_conclusion_checker import VKRConclusionChecker
 from src.services.vkr_intro_checker import VKRIntroductionChecker
 from src.services.vkr_report import VKRReport
+from src.services.vkr_evaluation_wrapper import run_evaluation, check_structure
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -91,58 +92,60 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         classified_chunks = header_classifier.classify_headers(raw_chunks)
         vector_db = rag_engine.create_vector_db(classified_chunks)
 
+        # Оценка ЗАДАНИЯ
         evaluations = []
         for point in task_points:
             score, reason = vkr_analyzer.evaluate_point(point, vector_db)
             evaluations.append(
                 {"task_point": point, "score": score, "justification": reason}
             )
+            
+        # Проверка структуры
+        eval_structure = check_structure(classified_chunks)
 
-        application_status, application_report = application_checker.evaluate(
-            vector_db
-        )
-        application_evaluations = {
-            "section": "application",
-            "score": application_status,
-            "details": application_report,
-        }
-
-        literature_status, links_status, literature_report = (
-            literature_checker.evaluate(vector_db, raw_chunks)
-        )
-        literature_evaluations = {
-            "section": "literature",
-            "score": literature_status,
-            "if_links_exists": links_status,
-            "details": literature_report,
-        }
-
-        intro_evaluations = []
-        intro_score, intro_report = intro_checker.evaluate(
-            vector_db, total_doc_volume=len(raw_chunks)
-        )
-        intro_evaluations.append(
-            {
-                "section": "introduction",
-                "score": intro_score,
-                "details": intro_report,
-            }
+        # Оценка ПРИЛОЖЕНИЯ
+        application_evaluations = run_evaluation(
+            'application',
+            eval_structure,
+            application_checker.evaluate,
+            vector_db=vector_db
         )
 
-        conclusion_score, conclusion_report = conclusion_checker.evaluate(
-            vector_db, is_collective=len(fio_list) > 1
+        # Оценка СПИСКА ЛИТЕРАТУРЫ
+        literature_evaluations = run_evaluation(
+            'literature', 
+            eval_structure,
+            literature_checker.evaluate,
+            vector_db=vector_db,
+            raw_chunks=raw_chunks
         )
-        conclusion_evaluations = {
-            "section": "conclusion",
-            "score": conclusion_score,
-            "details": conclusion_report,
-        }
 
+        # Оценка ВВЕДЕНИЯ
+        intro_evaluations = run_evaluation(
+            'introduction',
+            eval_structure,
+            intro_checker.evaluate,
+            vector_db=vector_db,
+            total_doc_volume=len(raw_chunks)
+        )
+
+
+        # Оценка ЗАКЛЮЧЕНИЯ
+        conclusion_evaluations = run_evaluation(
+            'conclusion',
+            eval_structure,
+            conclusion_checker.evaluate,
+            vector_db=vector_db,
+            is_collective=len(fio_list) > 1
+        )
+
+        # ОТЧЕТ
         info_data = {"students": fio_list, "theme": theme}
         report_dict: Dict[str, Any] = vkr_report.generate_report(
             info_data, evaluations
         )
 
+        
         report_dict["signs_verification"] = signs_verification
         report_dict["evaluations"] = []
         report_dict["evaluations"].append(application_evaluations)

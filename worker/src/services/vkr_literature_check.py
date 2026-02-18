@@ -47,7 +47,7 @@ class LiteratureChecker:
                 (
                     "system",
                     """Проверь список литературы,
-                    соотвествующий следующим требованиям:
+соотвествующий следующим требованиям:
 1.	Проверка порядка источников\
 2.	Проверка формата библиографических записей
 
@@ -76,7 +76,7 @@ class LiteratureChecker:
             | StrOutputParser()
         )
 
-        result = chain.invoke()
+        result = chain.invoke({"context": context})
 
         links_status = bool(self._check_links(raw_chunks))
 
@@ -87,4 +87,4 @@ class LiteratureChecker:
     ) -> Tuple[int, bool, str]:
         score_match = re.search(r"Статус: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
-        return score, links_status, result
+        return score, result, {"if_links_exists": links_status}

@@ -38,8 +38,6 @@ class HeaderClassifier:
 
         try:
             response = self.llm.invoke(messages)
-            print(response)
-            print(response.content)
             clean_json = re.sub(r'```json|```', '', response.content).strip()
             mapping = json.loads(clean_json)
             return self._build_final_structure(extracted_chunks, mapping)
@@ -64,4 +62,4 @@ class HeaderClassifier:
                 "text": chunk['text']
             })
             
-        return structured_data
+        return structured_data                
