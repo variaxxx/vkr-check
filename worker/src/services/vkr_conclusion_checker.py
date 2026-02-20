@@ -1,5 +1,5 @@
 import re
-from typing import Tuple
+from typing import Tuple, List
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
@@ -15,23 +15,30 @@ class VKRConclusionChecker:
         self.rag_engine = rag_engine
 
     def evaluate(
-        self, vector_db: FAISS, is_collective: bool = False
+        self,
+        vector_db: FAISS,
+        task_points: List[str],
+        is_collective: bool = False,
     ) -> Tuple[int, str]:
         """
-        Проверяет заключение ВКР
+        Проверяет заключение ВКР с учётом поставленных задач
         """
 
         docs = self.rag_engine.retrieve_relevant_chunks(
             vector_db,
             query="Заключение результаты практическая значимость внедрение развитие",
             categories=["conclusion"],
-            k=10
+            k=10,
         )
 
         context = self.rag_engine.get_context_from_docs(docs)
 
+        formatted_tasks = "\n".join(
+            [f"{i+1}. {task}" for i, task in enumerate(task_points)]
+        )
+
         collective_note = (
-            "4. Для коллективных ВКР, должны быть описаны результаты, полученные каждым автором самостоятельно."
+            "Для коллективных ВКР обязательно должно быть описано, какие результаты получены каждым автором самостоятельно."
             if is_collective
             else "Работа не является коллективной."
         )
@@ -41,10 +48,10 @@ class VKRConclusionChecker:
                 (
                     "system",
                     """
-Ты — эксперт по проверке заключений ВКР.
-Проверяй строго по методическим указаниям.
-Если пункт отсутствует - это нарушение.
-Не додумывай за автора.
+Ты - эксперт по проверке заключений ВКР. 
+Проверяй строго по методическим указаниям. 
+Если пункт отсутствует - это нарушение. 
+Не додумывай за автора. 
 Отвечай строго по шаблону.
 """,
                 ),
@@ -54,11 +61,15 @@ class VKRConclusionChecker:
 Текст заключения:
 {{context}}
 
-Методические требования к заключению:
-1. Содержит основные научные результаты и практические результаты, полученные при выполнении ВКР, соответствующие перечню поставленных задач
-2. Содержит практическую значимость полученных результатов
-3. Содержит направления работ по развитию и совершенствованию объекта разработки или исследования
+Поставленные задачи ВКР:
+{formatted_tasks}
+
+Методические требования к заключению: 
+1. Содержит основные научные результаты и практические результаты, полученные при выполнении ВКР, соответствующие перечню поставленных задач 
+2. Содержит практическую значимость полученных результатов 
+3. Содержит направления работ по развитию и совершенствованию объекта разработки или исследования 
 4. {collective_note}
+
 Опционально могут быть приведены:
 1. Результаты внедрения
 2. Предложения по внедрению и тиражированию
@@ -80,10 +91,11 @@ class VKRConclusionChecker:
             | self.llm.bind(max_tokens=600, temperature=0)
             | StrOutputParser()
         )
+
         result = chain.invoke({"context": context})
         return self._parse_result(result)
 
     def _parse_result(self, text: str) -> Tuple[int, str]:
         score_match = re.search(r"Балл:\s*(\d+)", text)
         score = int(score_match.group(1)) if score_match else 0
-        return score, text, {}
+        return score, text

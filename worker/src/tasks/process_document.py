@@ -92,6 +92,8 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         classified_chunks = header_classifier.classify_headers(raw_chunks)
         vector_db = rag_engine.create_vector_db(classified_chunks)
 
+        task_points = task_parser.get_task_points(file_buffer)
+
         # Оценка ЗАДАНИЯ
         task_evaluations = []
         for point in task_points:
@@ -135,6 +137,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             eval_structure,
             conclusion_checker.evaluate,
             vector_db=vector_db,
+            task_points=task_points,
             is_collective=len(fio_list) > 1
         )
 
