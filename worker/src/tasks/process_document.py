@@ -10,19 +10,19 @@ from src.core.di import run_in_di
 from src.infra.db.models import Author, Document
 from src.infra.minio import MinioService
 from src.main import worker
-from src.services.vkr_application_check import ApplicationChecker
 from src.services.doc_processors import DocumentProcessorService
 from src.services.headers_classifier import HeaderClassifier
 from src.services.info_parser import InfoParser
-from src.services.vkr_literature_check import LiteratureChecker
 from src.services.pages_markup import MarkupPages
 from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
 from src.services.vkr_analyzer import VKRAnalyzer
+from src.services.vkr_application_check import ApplicationChecker
 from src.services.vkr_conclusion_checker import VKRConclusionChecker
+from src.services.vkr_evaluation_wrapper import check_structure, run_evaluation
 from src.services.vkr_intro_checker import VKRIntroductionChecker
+from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
-from src.services.vkr_evaluation_wrapper import run_evaluation, check_structure
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -99,7 +99,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             task_evaluations.append(
                 {"task_point": point, "score": score, "justification": reason}
             )
-            
+
         # Проверка структуры
         eval_structure = check_structure(classified_chunks)
 
@@ -113,7 +113,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
         # Оценка СПИСКА ЛИТЕРАТУРЫ
         literature_evaluations = run_evaluation(
-            'literature', 
+            'literature',
             eval_structure,
             literature_checker.evaluate,
             vector_db=vector_db,
@@ -128,7 +128,6 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             vector_db=vector_db,
             total_doc_volume=len(raw_chunks)
         )
-
 
         # Оценка ЗАКЛЮЧЕНИЯ
         conclusion_evaluations = run_evaluation(
@@ -146,7 +145,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             intro_evaluations,
             conclusion_evaluations
         ]
-        
+
         info_data = {"students": fio_list, "theme": theme}
         report_dict: Dict[str, Any] = vkr_report.generate_report(
             info_data, task_evaluations, signs_verification, evaluations

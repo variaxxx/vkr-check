@@ -1,5 +1,4 @@
 import re
-from email.charset import Charset
 from typing import Tuple
 
 from langchain_community.vectorstores import FAISS

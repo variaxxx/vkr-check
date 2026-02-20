@@ -1,12 +1,12 @@
 import re
 from typing import Tuple
 
+from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from .llm_service import LLMService
 from .rag import RAGEngine
-from langchain_community.vectorstores import FAISS
 
 
 class VKRAnalyzer:
@@ -17,7 +17,7 @@ class VKRAnalyzer:
 
     def evaluate_point(self, task_point: str, vector_db: FAISS) -> Tuple[int, str]:
         """Оценивает пункт задания, понимая, где в дипломе искать информацию"""
-        
+
         target_categories = None
         if any(word in task_point.lower() for word in ["литератур", "источник", "библиогр"]):
             target_categories = ["biblio", "main"]
@@ -25,8 +25,8 @@ class VKRAnalyzer:
             target_categories = ["intro", "main", "conclusion"]
 
         docs = self.rag_engine.retrieve_relevant_chunks(
-            vector_db, 
-            task_point, 
+            vector_db,
+            task_point,
             categories=target_categories
         )
         context = self.rag_engine.get_context_from_docs(docs)
@@ -45,7 +45,7 @@ class VKRAnalyzer:
 
         llm = self.llm_service.get_llm()
         chain = prompt | llm.bind(max_tokens=512, temperature=0) | StrOutputParser()
-        
+
         try:
             result = chain.invoke(
                 {"task_point": task_point, "context": context},

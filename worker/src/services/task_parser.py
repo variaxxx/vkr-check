@@ -4,8 +4,8 @@ from typing import List
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from .llm_service import LLMService
 from .doc_processors import DocumentProcessorService
+from .llm_service import LLMService
 
 
 class TaskParser:

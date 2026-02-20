@@ -21,7 +21,7 @@ class VKRReport:
             }
 
         avg_score = sum(total_scores) / len(total_scores)
-        
+
         return {
             "average_score": round(avg_score, 2),
             "compliance_percentage": round(avg_score * 10, 1),
@@ -31,13 +31,13 @@ class VKRReport:
     @classmethod
     def generate_report(
         cls,
-        info: dict, 
+        info: dict,
         task_evaluations: List[Dict[str, Any]],
-        signs_verification: dict, 
+        signs_verification: dict,
         evaluations: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Генерирует финальную структуру отчета"""
-        
+
         summary = cls._calculate_summary(task_evaluations)
 
         report_data = {

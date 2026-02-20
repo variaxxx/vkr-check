@@ -1,6 +1,5 @@
 from dishka import Provider, Scope, provide
 
-from src.services.vkr_application_check import ApplicationChecker
 from src.services.doc_processors import (
     DocumentProcessorService,
     DOCXProcessor,
@@ -8,14 +7,15 @@ from src.services.doc_processors import (
 )
 from src.services.headers_classifier import HeaderClassifier
 from src.services.info_parser import InfoParser
-from src.services.vkr_literature_check import LiteratureChecker
 from src.services.llm_service import LLMService
 from src.services.pages_markup import MarkupPages
 from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
 from src.services.vkr_analyzer import VKRAnalyzer
+from src.services.vkr_application_check import ApplicationChecker
 from src.services.vkr_conclusion_checker import VKRConclusionChecker
 from src.services.vkr_intro_checker import VKRIntroductionChecker
+from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
 
 

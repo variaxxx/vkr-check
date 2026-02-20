@@ -1,8 +1,8 @@
 import io
 from typing import List
 
-from .llm_service import LLMService
 from .doc_processors import DocumentProcessorService
+from .llm_service import LLMService
 
 
 class InfoParser:
@@ -11,7 +11,7 @@ class InfoParser:
     def __init__(self, llm_service: LLMService, doc_processor: DocumentProcessorService):
         self.llm_service = llm_service
         self.doc_processor = doc_processor
-        
+
     def get_fio(self, pdf_file: io.BytesIO) -> List[str]:
         """Извлекает пункты задания из PDF"""
 

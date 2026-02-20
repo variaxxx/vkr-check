@@ -48,7 +48,7 @@ class BaseProcessor:
             return None
 
         raw_title = None
-        
+
         # 1. Сначала проверяем, есть ли Markdown заголовок (#)
         md_match = re.match(r"^#+\s+(.*)", line)
         if md_match:
@@ -67,15 +67,15 @@ class BaseProcessor:
             # ФИЛЬТРАЦИЯ
             if any(noise in upper_title for noise in BaseProcessor.TITLE_NOISE):
                 return None
-            
+
             # Проверка длины и точки (точка в конце часто признак обычного предложения)
             if (
-                len(clean_title) < 3 # Сократил до 3, чтобы "П-1" или подобные влезали
-                or len(clean_title) > 200 # Чуть расширил лимит
+                len(clean_title) < 3  # Сократил до 3, чтобы "П-1" или подобные влезали
+                or len(clean_title) > 200  # Чуть расширил лимит
                 or clean_title.endswith(".")
             ):
                 return None
-                
+
             # Валидация: начинается с заглавной или цифры
             if not clean_title[0].isdigit() and not clean_title[0].isupper():
                 return None
@@ -87,7 +87,7 @@ class BaseProcessor:
     def _split_markdown_by_headers(md_text: str) -> List[Dict[str, str]]:
         lines = md_text.split("\n")
         chunks = []
-        
+
         current_header = "Титульный лист"
         current_content = []
 
@@ -100,10 +100,10 @@ class BaseProcessor:
 
         for line in lines:
             new_header = BaseProcessor._get_header_title(line)
-            
+
             if new_header:
                 text_before = get_clean_text(current_content)
-                
+
                 # ЛОГИКА СКЛЕЙКИ:
                 # Если под текущим заголовком пусто И это не титульник — клеим к заголовку
                 if not text_before and current_header != "Титульный лист":
@@ -112,7 +112,7 @@ class BaseProcessor:
                     # Если текст был, сохраняем старый чанк и начинаем новый
                     if text_before or current_header != "Титульный лист":
                         chunks.append({"header": current_header, "text": text_before})
-                    
+
                     current_header = new_header
                     current_content = []
             else:
@@ -184,7 +184,7 @@ class DOCXProcessor(BaseProcessor):
                     check=True,
                     capture_output=True,
                 )
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 subprocess.run(
                     [
                         "soffice",
