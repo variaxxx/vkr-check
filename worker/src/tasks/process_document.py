@@ -23,6 +23,7 @@ from src.services.vkr_evaluation_wrapper import check_structure, run_evaluation
 from src.services.vkr_intro_checker import VKRIntroductionChecker
 from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
+from src.services.vkr_annotation_checker import VKRAnnotationChecker
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -55,6 +56,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     conclusion_checker = di.get(VKRConclusionChecker)
     application_checker = di.get(ApplicationChecker)
     literature_checker = di.get(LiteratureChecker)
+    annotation_checker = di.get(VKRAnnotationChecker)
 
     doc = db.get(Document, doc_id)
     if doc is None:
@@ -141,12 +143,21 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             is_collective=len(fio_list) > 1
         )
 
+        #Оценка АННОТАЦИЙ
+        annotation_evaluations = run_evaluation(
+            'annotation',
+            eval_structure,
+            annotation_checker.evaluate,
+            vector_db=vector_db
+        )
+
         # ОТЧЕТ
         evaluations = [
             application_evaluations,
             literature_evaluations,
             intro_evaluations,
-            conclusion_evaluations
+            conclusion_evaluations,
+            annotation_evaluations
         ]
 
         info_data = {"students": fio_list, "theme": theme}
