@@ -34,6 +34,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - backend
 
   keycloak:
     image: keycloak/keycloak:26.3.2
@@ -45,6 +47,8 @@ services:
       - "8155:8080"
     command:
       - start-dev
+    networks:
+      - backend
 
   rabbit-mq:
     image: rabbitmq:3-management
@@ -58,19 +62,43 @@ services:
     networks:
       - backend
 
-  # server:
-  #   build: ./backend
-  #   restart: unless-stopped
-  #   command: uvicorn src.main:app --host=0.0.0.0 --port=8000
-  #   env_file:
-  #     - ./backend/.env
-  #   depends_on:
-  #     - minio
-  #     - postgres
-  #   ports:
-  #     - "8000:8000"
-  #   networks:
-  #     - backend
+  backend:
+    container_name: vkr-check-backend
+    build: ./backend
+    restart: unless-stopped
+    command: uvicorn src.main:app --host=0.0.0.0 --port=8000
+    env_file:
+      - ./backend/.env.production
+    depends_on:
+      - minio
+      - postgres
+    ports:
+      - "8000:8000"
+    networks:
+      - backend
+
+  frontend:
+    container_name: vkr-check-frontend
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - backend
+
+  nginx:
+    container_name: vkr-check-nginx
+    image: nginx:stable-alpine
+    restart: on-failure
+    ports:
+      - "4200:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    depends_on:
+      - frontend
+      - backend                                               
+    networks:
+      - backend
 
 networks:
   backend:

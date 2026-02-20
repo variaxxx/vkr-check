@@ -1,8 +1,9 @@
+import { NgClass } from "@angular/common";
+import { ChangeDetectionStrategy, Component, inject, input } from "@angular/core";
+
 import { IconName } from "../../../app.icons";
 import { NotificationItem, NotificationService, NotificationType } from "../../../core/services";
 import { Icon } from "../icon/icon";
-import { NgClass } from "@angular/common";
-import { ChangeDetectionStrategy, Component, inject, input } from "@angular/core";
 
 interface NotificationConfig {
   icon: IconName;

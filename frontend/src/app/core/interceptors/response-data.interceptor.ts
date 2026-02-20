@@ -1,7 +1,8 @@
-import { env } from "../../../environments/environment";
-import { ApiResponse } from "../interfaces";
 import { HttpEvent, HttpHandlerFn, HttpRequest, HttpResponse } from "@angular/common/http";
 import { map, Observable } from "rxjs";
+
+import { env } from "../../../environments/environment";
+import { ApiResponse } from "../interfaces";
 
 export function responseDataInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<any>> {
   return next(req).pipe(

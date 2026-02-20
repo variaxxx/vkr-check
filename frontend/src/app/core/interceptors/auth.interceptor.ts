@@ -1,9 +1,10 @@
-import { env } from "../../../environments/environment";
-import { AuthService, NotificationService } from "../services";
 import { HttpEvent, HttpHandlerFn, HttpRequest } from "@angular/common/http";
 import { inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { BehaviorSubject, catchError, filter, Observable, switchMap, tap, throwError } from "rxjs";
+
+import { env } from "../../../environments/environment";
+import { AuthService, NotificationService } from "../services";
 
 const isRefreshing$ = new BehaviorSubject<boolean>(false);
 
@@ -19,8 +20,6 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
           notificationService.error("В данный момент сервер недоступен");
         } else if (err.status === 403) {
           notificationService.error("У Вас нет доступа");
-        } else {
-          notificationService.error("Что-то пошло не так");
         }
 
         return throwError(() => err);
@@ -40,8 +39,6 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
         notificationService.error("В данный момент сервер недоступен");
       } else if (err.status === 403) {
         notificationService.error("У Вас нет доступа");
-      } else {
-        notificationService.error("Что-то пошло не так");
       }
 
       return throwError(() => err);

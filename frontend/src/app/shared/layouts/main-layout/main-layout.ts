@@ -1,7 +1,8 @@
-import { Header } from "../../components/header/header";
-import { Navbar } from "../../components/navbar/navbar";
 import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
+
+import { Header } from "../../components/header/header";
+import { Navbar } from "../../components/navbar/navbar";
 
 @Component({
   selector: "app-main-layout",

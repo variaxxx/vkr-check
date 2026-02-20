@@ -1,5 +1,6 @@
-import { IsLoggedInGuard } from "./core/guards/is-logged-in.guard";
 import { Routes } from "@angular/router";
+
+import { IsLoggedInGuard } from "./core/guards/is-logged-in.guard";
 
 export const routes: Routes = [
   {
@@ -17,7 +18,11 @@ export const routes: Routes = [
       },
       {
         path: "history",
-        loadComponent: () => import("./features/history/history").then(m => m.History),
+        loadComponent: () => import("./features/documents/pages/history-page/history-page").then(m => m.HistoryPage),
+      },
+      {
+        path: "docs/:docId",
+        loadComponent: () => import("./features/documents/pages/document-page/document-page").then(m => m.DocumentPage),
       },
     ],
   },

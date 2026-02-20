@@ -12,19 +12,21 @@
     }
   } @else {
     @if (docsState().data; as docs) {
-      @for (doc of docs.items; track $index) {
-        <app-recent-docs-list-item
-          [doc]="doc"
-          class="border-neutral-200 hover:bg-neutral-100 transition-colors cursor-pointer"
-          [class.border-b]="$index != docs.items.length - 1"
-          [routerLink]="['docs', doc.id]"
-          ></app-recent-docs-list-item>
-      }
-    } @else {
+      @if (docs.items.length !== 0) {
+        @for (doc of docs.items; track $index) {
+          <app-recent-docs-list-item
+            [doc]="doc"
+            class="border-neutral-200 hover:bg-neutral-100 transition-colors cursor-pointer"
+            [class.border-b]="$index != docs.items.length - 1"
+            [routerLink]="['docs', doc.id]"
+            ></app-recent-docs-list-item>
+        }
+      } @else {
       <div class="px-6 py-8 flex items-center justify-center text-neutral-500 gap-2">
         <app-icon icon="file-x" class="w-5 h-5"></app-icon>
         Вы еще не загружали документов
       </div>
+      }
     }
   }
 </div>
