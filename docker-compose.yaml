@@ -30,7 +30,7 @@ services:
       MINIO_USE_SSL: false
     command: server --console-address ":9001" /data/
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -58,19 +58,19 @@ services:
     networks:
       - backend
 
-  server:
-    build: ./backend
-    restart: unless-stopped
-    command: uvicorn src.main:app --host=0.0.0.0 --port=8000
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - minio
-      - postgres
-    ports:
-      - "8000:8000"
-    networks:
-      - backend
+  # server:
+  #   build: ./backend
+  #   restart: unless-stopped
+  #   command: uvicorn src.main:app --host=0.0.0.0 --port=8000
+  #   env_file:
+  #     - ./backend/.env
+  #   depends_on:
+  #     - minio
+  #     - postgres
+  #   ports:
+  #     - "8000:8000"
+  #   networks:
+  #     - backend
 
 networks:
   backend:

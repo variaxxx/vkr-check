@@ -1,0 +1,67 @@
+import io
+from typing import List
+
+from .doc_processors import DocumentProcessorService
+from .llm_service import LLMService
+
+
+class InfoParser:
+    """Класс для извлечения задания из PDF с помощью Vision"""
+
+    def __init__(self, llm_service: LLMService, doc_processor: DocumentProcessorService):
+        self.llm_service = llm_service
+        self.doc_processor = doc_processor
+
+    def get_fio(self, pdf_file: io.BytesIO) -> List[str]:
+        """Извлекает пункты задания из PDF"""
+
+        pages = self.doc_processor.get_pages_as_base64(pdf_file, 1, 1)
+        content = [
+            {
+                "type": "text",
+                "text": "Найди на этой странице ФИО студентов выполнивших дипломную работу. Верни только полное имя в формате: Фамилия Имя Отчество - группа. Не используй инициалы.",  # noqa: E501
+            }
+        ]
+
+        for b64 in pages:
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                }
+            )
+
+        raw_text = self.llm_service.invoke_vision(content)
+
+        return [p.strip() for p in raw_text.split("\n") if len(p.strip()) > 10]
+
+    def get_theme(self, pdf_file: io.BytesIO) -> List[str]:
+        """Извлекает пункты задания из PDF"""
+
+        pages = self.doc_processor.get_pages_as_base64(pdf_file, 2, 2)
+        content = [
+            {
+                "type": "text",
+                "text": "Найди на этой странице тему дипломной работы. Выведи полностью текст темы без изменений.",  # noqa: E501
+            }
+        ]
+
+        for b64 in pages:
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                }
+            )
+
+        raw_text = self.llm_service.invoke_vision(content)
+
+        return raw_text
+
+    def get_info(self, pdf_file: io.BytesIO) -> dict:
+        res = {
+            "students": self.get_fio(pdf_file),
+            "theme": self.get_theme(pdf_file),
+        }
+
+        return res

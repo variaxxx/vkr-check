@@ -6,11 +6,11 @@ from fastapi.responses import StreamingResponse
 from minio import S3Error
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.celery import worker
 from src.common.schemas import FindManyResponse, TokenUserInfo
 from src.common.utils import clamp
 from src.infra.db.models import Author, Document, DocumentStatus
 from src.infra.minio import MinioService
-from src.ml_worker import process_document
 
 from .repositories import DocumentRepository
 from .schemas import (
@@ -72,7 +72,8 @@ class DocumentService:
 
         for doc in uploaded_docs:
             await self.db.refresh(doc)
-            process_document.delay(doc.id)
+
+            worker.send_task("ml.process_document", args=[str(doc.id)])
 
         return UploadDocumentResponse(
             skipped_count=skipped_count, skipped_files=skipped_files

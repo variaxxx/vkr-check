@@ -1,5 +1,7 @@
 s3/
 .vscode/
 .env
-
+.python-version
+.DS_Store
 node_modules/
+test
