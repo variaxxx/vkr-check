@@ -26,7 +26,7 @@ class LiteratureChecker:
 
     def evaluate(
         self, vector_db: FAISS, raw_chunks: List[Dict[str, str]]
-    ) -> Tuple[int, bool, str]:
+    ) -> Tuple[int, str, Dict[str, bool]]:
         """
         Проверяет правильность списка литературы
         """
@@ -39,7 +39,7 @@ class LiteratureChecker:
         )
 
         if not docs:
-            return False, False, "Не найдено списка литературы"
+            return False, "False", {"if_links_exists": False}
 
         context = self.rag_engine.get_context_from_docs(docs)
         prompt = ChatPromptTemplate.from_messages(
@@ -59,7 +59,7 @@ class LiteratureChecker:
 3.	Проверка наличия URL и даты обращения для онлайн-источников
 
 Шаблон ответа:
-Статус: [0-1], где 0 - список литературы не соответствует требованиям, 1 - список литературы соответствует требованиям
+Статус: [0-10], где 0 - список литературы полностью не соответствует требованиям, 1 - список литературы соответствует требованиям
 Нарушения:
 - ...
 - ...
@@ -84,7 +84,7 @@ class LiteratureChecker:
 
     def _parse_result(
         self, result: str, links_status: bool
-    ) -> Tuple[int, bool, str]:
+    ) -> Tuple[int, str, Dict[str, bool]]:
         score_match = re.search(r"Статус: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {"if_links_exists": links_status}

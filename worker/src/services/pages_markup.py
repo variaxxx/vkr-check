@@ -61,7 +61,7 @@ class MarkupPages:
         ]
         return len(detections_list) > 0
 
-    def markup_pdf(self, pdf_bytes: io.BytesIO) -> Tuple[bool, List[str]]:
+    def markup_pdf(self, pdf_bytes: io.BytesIO) -> Tuple[bool, List[int]]:
         """
         Определяет везде ли есть подписи на изображении.
         return: bool
@@ -75,16 +75,15 @@ class MarkupPages:
         pages_markup = [pages[i] for i in pages_indeces]
         count = len(pages_indeces)
         if count == 0:
-            return False
+            return False, []
         c: int = 0
-        ans: List[str] = []
         for b64 in pages_markup:
             content = [
                 {
                     "type": "text",
-                    "text": "Определи, везде ли на этом изображении проставлены подписи рядом с фамилиями? Ответь '1', "
+                    "text": "Определи, везде ли на этом изображении проставлены подписи рядом с фамилиями(Оценивай нестрого)? Ответь '1', "
                     "если проставлены все подписи(блок без фамилии не считается за отсутствие подписи), либо '0', если не все подписи проставлены. "
-                    "Важно: Каждая подпись должна соотвествовать фамилии, если пустой блок без фамилии, то это НЕ считается отсутствием подписи.",
+                    "Важно: Если стоит пустой блок и нет фамилии, то это '1', если стоит пустой блок и рядом есть фамилия, то это '0', если стоит фамилия без блока, то это '1'",
                 },
                 {
                     "type": "image_url",
@@ -92,8 +91,7 @@ class MarkupPages:
                 },
             ]
             answer = self.llm_service.invoke_vision(content)
-            ans.append(answer)
             if "1" in answer:
                 c += 1
         #
-        return count == c, ans
+        return count == c, pages_indeces

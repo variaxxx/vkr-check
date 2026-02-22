@@ -1,5 +1,5 @@
 import re
-from typing import Tuple
+from typing import Tuple, Dict
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
@@ -14,7 +14,7 @@ class ApplicationChecker:
         self.llm = llm_service.get_llm()
         self.rag_engine = rag_engine
 
-    def evaluate(self, vector_db: FAISS) -> Tuple[int, str]:
+    def evaluate(self, vector_db: FAISS) -> Tuple[int, str, Dict]:
         """
         Проверяет правильность приложения
         """
@@ -44,8 +44,8 @@ class ApplicationChecker:
 последних страницах.
 
 Шаблон ответа:
-Статус: [0-1], где 0 - приложение не соответствует требованиям,
-1 - приложение соответствует требованиям
+Статус: [0-10], где 0 - приложение полностью не соответствует требованиям,
+10 - приложение соответствует требованиям
 Нарушения:
 - ...
 - ...
@@ -66,7 +66,7 @@ class ApplicationChecker:
 
         return self._parse_result(result)
 
-    def _parse_result(self, result: str) -> Tuple[int, str]:
+    def _parse_result(self, result: str) -> Tuple[int, str, Dict]:
         score_match = re.search(r"Статус: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {}

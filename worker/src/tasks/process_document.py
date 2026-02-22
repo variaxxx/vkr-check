@@ -73,12 +73,14 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         file_buffer = io.BytesIO(file_response.read())
 
         status: bool = False
-        txt: List[str] = []
+        pages_indexes: List[int] = []
         if doc_service.is_pdf():
-            status, txt = sign_verify.markup_pdf(file_buffer)
+            status, pages_indexes = sign_verify.markup_pdf(file_buffer)
+
 
         signs_verification = {"signs_status_code": status}
-
+        print(f"Signs verification status code: {status}")
+        print(f"Model's answer(показывает индексы страниц, которые в обработке у модели): ", pages_indexes)
         task_points = task_parser.get_task_points(file_buffer)
         file_buffer.seek(0)
 
