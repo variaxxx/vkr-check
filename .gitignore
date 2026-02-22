@@ -5,3 +5,4 @@ s3/
 .DS_Store
 node_modules/
 test
+readme_mac.md

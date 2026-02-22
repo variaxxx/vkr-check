@@ -110,7 +110,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             'application',
             eval_structure,
             application_checker.evaluate,
-            vector_db=vector_db
+            chunks=classified_chunks
         )
 
         # Оценка СПИСКА ЛИТЕРАТУРЫ
@@ -118,8 +118,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             'literature',
             eval_structure,
             literature_checker.evaluate,
-            vector_db=vector_db,
-            raw_chunks=raw_chunks
+            chunks=classified_chunks
         )
 
         # Оценка ВВЕДЕНИЯ
