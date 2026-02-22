@@ -61,7 +61,7 @@ class VKRIntroductionChecker:
 """)
         ])
 
-        chain = prompt | self.llm.bind(max_tokens=600, temperature=0) | StrOutputParser()
+        chain = prompt | self.llm.bind(max_tokens=600, temperature=0.1) | StrOutputParser()
 
         result = chain.invoke({"context": context})
         return self._parse_result(result)

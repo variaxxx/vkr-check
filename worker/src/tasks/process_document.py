@@ -58,102 +58,76 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
     doc = db.get(Document, doc_id)
     if doc is None:
+        print(f"[DEBUG] Doc {doc_id} not found")
         return
 
     doc.status = DocumentStatus.IN_PROCESSING
     db.commit()
+    print(f"[DEBUG] Start processing doc: {doc_id}")
 
     try:
+        # Загрузка файла
         bucket_name, object_name = doc.file_url.split("/", 1)
         obj_stat = minio.client.stat_object(bucket_name, object_name)
-
         doc_service.set_context(obj_stat.content_type)
-
         file_response = minio.client.get_object(bucket_name, object_name)
         file_buffer = io.BytesIO(file_response.read())
+        print("[DEBUG] File loaded from Minio")
 
+        # Проверка подписей (только PDF)
         status: bool = False
         txt: List[str] = []
         if doc_service.is_pdf():
             status, txt = sign_verify.markup_pdf(file_buffer)
-
         signs_verification = {"signs_status_code": status}
+        print(f"[DEBUG] Signs verified: {status}")
 
+        # Парсинг базовой информации
         task_points = task_parser.get_task_points(file_buffer)
         file_buffer.seek(0)
-
         fio_list = info_parser.get_fio(file_buffer)
         file_buffer.seek(0)
-
         theme = info_parser.get_theme(file_buffer)
         file_buffer.seek(0)
+        print(f"[DEBUG] Info parsed: FIO={len(fio_list)}, Points={len(task_points)}")
 
+        # Структурирование и RAG
         raw_chunks = doc_service.get_structured_text(file_buffer)
         classified_chunks = header_classifier.classify_headers(raw_chunks)
         vector_db = rag_engine.create_vector_db(classified_chunks)
+        print(f"[DEBUG] Vector DB created. Chunks: {len(raw_chunks)}")
 
         # Оценка ЗАДАНИЯ
         task_evaluations = []
         for point in task_points:
             score, reason = vkr_analyzer.evaluate_point(point, vector_db)
-            task_evaluations.append(
-                {"task_point": point, "score": score, "justification": reason}
-            )
+            task_evaluations.append({"task_point": point, "score": score, "justification": reason})
+        print("[DEBUG] Task evaluation done")
 
         # Проверка структуры
         eval_structure = check_structure(classified_chunks)
+        print(f"[DEBUG] Structure check done: {eval_structure}")
 
-        # Оценка ПРИЛОЖЕНИЯ
-        application_evaluations = run_evaluation(
-            'application',
-            eval_structure,
-            application_checker.evaluate,
-            vector_db=vector_db
-        )
+        # Оценки разделов (Приложение, Литература, Введение, Заключение)
+        application_evaluations = run_evaluation('application', eval_structure, application_checker.evaluate, vector_db=vector_db)
+        print("[DEBUG] Application evaluated")
 
-        # Оценка СПИСКА ЛИТЕРАТУРЫ
-        literature_evaluations = run_evaluation(
-            'literature',
-            eval_structure,
-            literature_checker.evaluate,
-            vector_db=vector_db,
-            raw_chunks=raw_chunks
-        )
+        literature_evaluations = run_evaluation('literature', eval_structure, literature_checker.evaluate, vector_db=vector_db, raw_chunks=raw_chunks)
+        print("[DEBUG] Literature evaluated")
 
-        # Оценка ВВЕДЕНИЯ
-        intro_evaluations = run_evaluation(
-            'introduction',
-            eval_structure,
-            intro_checker.evaluate,
-            vector_db=vector_db,
-            total_doc_volume=len(raw_chunks)
-        )
+        intro_evaluations = run_evaluation('introduction', eval_structure, intro_checker.evaluate, vector_db=vector_db, total_doc_volume=len(raw_chunks))
+        print("[DEBUG] Introduction evaluated")
 
-        # Оценка ЗАКЛЮЧЕНИЯ
-        conclusion_evaluations = run_evaluation(
-            'conclusion',
-            eval_structure,
-            conclusion_checker.evaluate,
-            vector_db=vector_db,
-            is_collective=len(fio_list) > 1
-        )
+        conclusion_evaluations = run_evaluation('conclusion', eval_structure, conclusion_checker.evaluate, vector_db=vector_db, is_collective=len(fio_list) > 1)
+        print("[DEBUG] Conclusion evaluated")
 
-        # ОТЧЕТ
-        evaluations = [
-            application_evaluations,
-            literature_evaluations,
-            intro_evaluations,
-            conclusion_evaluations
-        ]
-
+        # Генерация отчета
+        evaluations = [application_evaluations, literature_evaluations, intro_evaluations, conclusion_evaluations]
         info_data = {"students": fio_list, "theme": theme}
-        report_dict: Dict[str, Any] = vkr_report.generate_report(
-            info_data, task_evaluations, signs_verification, evaluations
-        )
+        report_dict: Dict[str, Any] = vkr_report.generate_report(info_data, task_evaluations, signs_verification, evaluations)
+        print("[DEBUG] Report generated")
 
-        report_json_tmp = json.dumps(report_dict, ensure_ascii=True)
-        report_json = json.loads(report_json_tmp)
-
+        # Сохранение авторов и результатов
         for student in fio_list:
             parts = student.split()
             author = Author(
@@ -165,15 +139,14 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
             doc.authors.append(author)
 
         doc.score = report_dict["summary"].get("average_score", 0)
-        doc.topic = (
-            theme if isinstance(theme, str) else (theme[0] if theme else "")
-        )
+        doc.topic = theme if isinstance(theme, str) else (theme[0] if theme else "")
         doc.status = DocumentStatus.SUCCESS
-        doc.result = report_json
+        doc.result = report_dict
         db.commit()
+        print(f"[DEBUG] Success: {doc_id} processed")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"[ERROR] Doc {doc_id} failed: {e}")
         db.rollback()
         doc.status = DocumentStatus.FAILED
         db.commit()
