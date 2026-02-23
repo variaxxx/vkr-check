@@ -45,7 +45,8 @@ def check_structure(final_structure: List[Dict]) -> Dict:
         "application": categories["application"],
         "literature": categories["biblio"],
         "introduction": categories["intro"],
-        "conclusion": categories["conclusion"]
+        "conclusion": categories["conclusion"],
+        "annotation": categories["annotation_ru"] and categories["annotation_en"]
     }
 
     return evaluations

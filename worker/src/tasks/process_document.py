@@ -23,6 +23,7 @@ from src.services.vkr_evaluation_wrapper import check_structure, run_evaluation
 from src.services.vkr_intro_checker import VKRIntroductionChecker
 from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
+from src.services.vkr_annotation_checker import VKRAnnotationChecker
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -55,6 +56,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     conclusion_checker = di.get(VKRConclusionChecker)
     application_checker = di.get(ApplicationChecker)
     literature_checker = di.get(LiteratureChecker)
+    annotation_checker = di.get(VKRAnnotationChecker)
 
     doc = db.get(Document, doc_id)
     if doc is None:
@@ -99,6 +101,8 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         vector_db = rag_engine.create_vector_db(classified_chunks)
         print(f"[DEBUG] Vector DB created. Chunks: {len(raw_chunks)}")
 
+        task_points = task_parser.get_task_points(file_buffer)
+
         # Оценка ЗАДАНИЯ
         task_evaluations = []
         for point in task_points:
@@ -110,7 +114,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         eval_structure = check_structure(classified_chunks)
         print(f"[DEBUG] Structure check done: {eval_structure}")
 
-        # Оценки разделов (Приложение, Литература, Введение, Заключение)
+        # Оценки разделов (Приложение, Литература, Введение, Заключение, Аннотации)
         application_evaluations = run_evaluation('application', eval_structure, application_checker.evaluate, chunks=classified_chunks)
         print("[DEBUG] Application evaluated")
 
@@ -120,8 +124,20 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         intro_evaluations = run_evaluation('introduction', eval_structure, intro_checker.evaluate, vector_db=vector_db, total_doc_volume=len(raw_chunks))
         print("[DEBUG] Introduction evaluated")
 
-        conclusion_evaluations = run_evaluation('conclusion', eval_structure, conclusion_checker.evaluate, vector_db=vector_db, is_collective=len(fio_list) > 1)
+        conclusion_evaluations = run_evaluation('conclusion', eval_structure, conclusion_checker.evaluate, vector_db=vector_db, task_points=task_points, is_collective=len(fio_list) > 1)
         print("[DEBUG] Conclusion evaluated")
+
+        annotation_evaluations = run_evaluation('annotation', eval_structure, annotation_checker.evaluate, chunks=classified_chunks)
+        print("[DEBUG] Annotations evaluated")
+        print(annotation_evaluations)
+        # ОТЧЕТ
+        evaluations = [
+            application_evaluations,
+            literature_evaluations,
+            intro_evaluations,
+            conclusion_evaluations,
+            annotation_evaluations
+        ]
 
         # Генерация отчета
         evaluations = [application_evaluations, literature_evaluations, intro_evaluations, conclusion_evaluations]
@@ -129,7 +145,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         report_dict: Dict[str, Any] = vkr_report.generate_report(info_data, task_evaluations, signs_verification, evaluations)
         print("[DEBUG] Report generated")
 
-        # Сохранение авторов и результатов
+        # Сохранение результатов
         for student in fio_list:
             parts = student.split()
             author = Author(
