@@ -1,47 +1,32 @@
 import re
 from typing import Dict, List, Tuple
 
-from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from src.services.llm_service import LLMService
-from src.services.rag import RAGEngine
 
 
 class LiteratureChecker:
-    def __init__(self, llm_service: LLMService, rag_engine: RAGEngine):
+    def __init__(self, llm_service: LLMService):
         self.llm = llm_service.get_llm()
-        self.rag_engine = rag_engine
 
-    def _check_links(self, raw_chunks: List[Dict[str, str]]) -> bool:
+    def _check_links(self, classified_chunks: List[Dict]) -> bool:
         """Топорная логика на наличие ссылок в списке литературы"""
         counter: int = 0
-        # print(raw_chunks)
-        for _, chunk in enumerate(raw_chunks):
+        for _, chunk in enumerate(classified_chunks):
             text = chunk.get("text", "")
-            links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text)
-            counter += len(links)
+            refs = re.findall(r"\[(\d+)\]", text)
+            counter += len(refs)
         return counter > 0
 
-    def evaluate(
-        self, vector_db: FAISS, raw_chunks: List[Dict[str, str]]
-    ) -> Tuple[int, bool, str]:
+    def evaluate(self, chunks: List[Dict]) -> Tuple[int, str, Dict[str, bool]]:
         """
         Проверяет правильность списка литературы
         """
-        # print(raw_chunks[-5:])
-        docs = self.rag_engine.retrieve_relevant_chunks(
-            vector_db=vector_db,
-            query="Список литературы литература ссылки источники",
-            k=10,
-            categories=["biblio"],
-        )
-        
-        if not docs:
-            return False, False, "Не найдено списка литературы"
 
-        context = self.rag_engine.get_context_from_docs(docs)
+        context: List = [i["text"] for i in chunks if i.get("category") == "biblio"]
+        
         prompt = ChatPromptTemplate.from_messages(
             [
     (
@@ -55,7 +40,7 @@ class LiteratureChecker:
     (
         "user", 
 f"""Текст списка литературы:
-{{context}}
+{"".join(context)}
 
 Методические требования к оформлению литературы:
 1. Нумерация: Арабские цифры БЕЗ точки в конце (например, 1 ). Абзацный отступ.
@@ -68,7 +53,7 @@ f"""Текст списка литературы:
 5. Интернет-ресурсы: Наличие URL: [ссылка] и даты обращения в формате (дата обращения: дд.мм.гггг) в скобках.
 
 Шаблон ответа:
-Балл: [0–10] (10 — идеальное соответствие)
+Балл: [0–10] (0 - список литературы полностью не соответствует требованиям, 10 — идеальное соответствие)
 Нарушения:
 - [наиболее частые нарушения пунктов ]
 - ...
@@ -85,13 +70,11 @@ f"""Текст списка литературы:
 
         result = chain.invoke({"context": context})
 
-        links_status = bool(self._check_links(raw_chunks))
+        links_status = bool(self._check_links(chunks))
 
         return self._parse_result(result, links_status)
 
-    def _parse_result(
-        self, result: str, links_status: bool
-    ) -> Tuple[int, bool, str]:
+    def _parse_result(self, result: str, links_status: bool) -> Tuple[int, str, Dict[str, bool]]:
         score_match = re.search(r"Балл: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {"if_links_exists": links_status}

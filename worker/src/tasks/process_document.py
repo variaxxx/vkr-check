@@ -76,13 +76,15 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
         # Проверка подписей (только PDF)
         status: bool = False
-        txt: List[str] = []
+        pages_indexes: List[int] = []
         if doc_service.is_pdf():
-            status, txt = sign_verify.markup_pdf(file_buffer)
-        signs_verification = {"signs_status_code": status}
-        print(f"[DEBUG] Signs verified: {status}")
+            status, pages_indexes = sign_verify.markup_pdf(file_buffer)
 
-        # Парсинг базовой информации
+
+        signs_verification = {"signs_status_code": status}
+        print(f"[DEBUG] Signs verification status code: {status}")
+        print(f"[DEBUG] Model's answer(показывает индексы страниц, которые в обработке у модели): ", pages_indexes)
+
         task_points = task_parser.get_task_points(file_buffer)
         file_buffer.seek(0)
         fio_list = info_parser.get_fio(file_buffer)

@@ -1,35 +1,25 @@
 import re
-from typing import Tuple
+from typing import Tuple, Dict, List
 
-from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from src.services.llm_service import LLMService
-from src.services.rag import RAGEngine
 
 
 class ApplicationChecker:
-    def __init__(self, llm_service: LLMService, rag_engine: RAGEngine):
+    def __init__(self, llm_service: LLMService):
         self.llm = llm_service.get_llm()
-        self.rag_engine = rag_engine
 
-    def evaluate(self, vector_db: FAISS) -> Tuple[int, str]:
+    def evaluate(self,  chunks: List[Dict]) -> Tuple[int, str, Dict]:
         """
         Проверяет правильность приложения
         """
 
-        docs = self.rag_engine.retrieve_relevant_chunks(
-            vector_db=vector_db,
-            query="приложение application",
-            k=20,
-            categories=["application"],
-        )
 
-        if not docs:
-            return False, "Не найдено приложение"
+        ## тут из классифицированных чанков.
+        context: List = [i["text"] for i in chunks if i.get("category") == "application"]
 
-        context = self.rag_engine.get_context_from_docs(docs)
         prompt = ChatPromptTemplate.from_messages(
             [
                 (
@@ -45,7 +35,7 @@ class ApplicationChecker:
 
                     ("user", 
 f"""Текст приложений:
-{{context}}
+{"".join(context)}
 
 Методические требования к оформлению приложений:
 1. Указано слово «Приложение» и тематический заголовок.
@@ -53,8 +43,13 @@ f"""Текст приложений:
 3. В приложении отсутствуют список литературы, справочные комментарии и примечания.
 4. Содержание соответствует справочному характеру (копии документов, таблицы, графики, акты).
 
+Важно: 
+1. если приложения нет, то выводи только следующий текст и ничего больше: Балл: 10, Отчет: Нет приложения, Нарушения: Нет приложения.
+2. Пиши ответ в формате текста, нельзя писать в формате markdown
+
 Шаблон ответа:
-Балл: [0–10]
+
+Балл: [0-10], (0 - приложение полностью не соответствует требованиям, 10 - приложение полностью соответствует требованиям)
 Нарушения:
 - ...
 - ...
@@ -74,7 +69,7 @@ f"""Текст приложений:
 
         return self._parse_result(result)
 
-    def _parse_result(self, result: str) -> Tuple[int, str]:
+    def _parse_result(self, result: str) -> Tuple[int, str, Dict]:
         score_match = re.search(r"Балл: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {}
