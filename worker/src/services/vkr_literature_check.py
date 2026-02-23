@@ -39,8 +39,8 @@ class LiteratureChecker:
     ),
     (
         "user", 
-f"""Текст списка литературы:
-{"".join(context)}
+"""Текст списка литературы:
+{context}
 
 Методические требования к оформлению литературы:
 1. Нумерация: Арабские цифры БЕЗ точки в конце (например, 1 ). Абзацный отступ.
@@ -68,7 +68,7 @@ f"""Текст списка литературы:
             | StrOutputParser()
         )
 
-        result = chain.invoke({"context": context})
+        result = chain.invoke({"context": "\n".join(context)})
 
         links_status = bool(self._check_links(chunks))
 

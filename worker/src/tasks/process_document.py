@@ -111,10 +111,10 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         print(f"[DEBUG] Structure check done: {eval_structure}")
 
         # Оценки разделов (Приложение, Литература, Введение, Заключение)
-        application_evaluations = run_evaluation('application', eval_structure, application_checker.evaluate, vector_db=vector_db)
+        application_evaluations = run_evaluation('application', eval_structure, application_checker.evaluate, chunks=classified_chunks)
         print("[DEBUG] Application evaluated")
 
-        literature_evaluations = run_evaluation('literature', eval_structure, literature_checker.evaluate, vector_db=vector_db, raw_chunks=raw_chunks)
+        literature_evaluations = run_evaluation('literature', eval_structure, literature_checker.evaluate, chunks=classified_chunks)
         print("[DEBUG] Literature evaluated")
 
         intro_evaluations = run_evaluation('introduction', eval_structure, intro_checker.evaluate, vector_db=vector_db, total_doc_volume=len(raw_chunks))
