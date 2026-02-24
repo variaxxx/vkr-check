@@ -12,4 +12,8 @@ vllm serve google/gemma-3n-E4B-it \
     --trust-remote-code \
     --enforce-eager \
     --gpu-memory-utilization 0.8 \
-    --max-model-len 16384
+    --max-model-len 16384 \
+    --no-enable-prefix-caching \
+    --enable-chunked-prefill \
+    --max-num-batched-tokens 4096 \
+    --max-num-seqs 32
