@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
 import { EvaluationItem, EvaluationSection } from "../../../../dto";
+import { Icon } from "@shared/components/icon/icon";
 
 @Component({
   selector: "app-evaluations-list",
-  imports: [],
+  imports: [Icon],
   templateUrl: "./evaluations-list.html",
   styleUrl: "./evaluations-list.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,5 +19,6 @@ export class EvaluationsList {
     introduction: "Введение",
     literature: "Список литературы",
     conclusion: "Вывод",
+    annotation: "Аннотация",
   };
 }
