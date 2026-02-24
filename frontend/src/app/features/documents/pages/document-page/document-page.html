@@ -46,6 +46,36 @@
             <p class="text-neutral-900">{{ doc.topic }}</p>
           </div>
 
+          @if (doc.result) {
+            <div>
+              <h4 class="text-sm font-medium uppercase text-neutral-500 tracking-wider mb-2">Статус подписей</h4>
+
+              @if (doc.result.signs_verification.signs_status_code) {
+                <div
+                  class="px-2.5 py-1.5 inline-flex items-center gap-2 rounded-md bg-green-100"
+                >
+                  <app-icon icon="check" class="min-w-4 max-w-4 text-green-700"></app-icon>
+                  <span
+                    class="text-sm text-green-700 whitespace-nowrap"
+                  >
+                    Присутствуют
+                  </span>
+                </div>
+              } @else {
+                <div
+                  class="px-2.5 py-1.5 inline-flex items-center gap-2 rounded-md bg-red-100"
+                >
+                  <app-icon icon="x" class="min-w-4 max-w-4 text-red-700"></app-icon>
+                  <span
+                    class="text-sm text-red-700 whitespace-nowrap"
+                  >
+                    Отсутствуют
+                  </span>
+                </div>
+              }
+            </div>
+          }
+
           <div>
             <h4 class="text-sm font-medium uppercase text-neutral-500 tracking-wider mb-2">Итоговая оценка</h4>
             <div class="flex items-center gap-2">
