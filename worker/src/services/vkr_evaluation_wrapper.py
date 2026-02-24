@@ -1,12 +1,15 @@
 from typing import Dict, List
 
 
-def run_evaluation(section_key, check_dict, eval_func, **kwargs):
+async def run_evaluation(section_key, check_dict, eval_func, **kwargs):
     """
-    Универсальная обертка для оценки секций документа.
+    Универсальная асинхронная обертка для оценки секций документа.
     """
     if check_dict.get(section_key):
-        score, report, tech_details = eval_func(**kwargs)
+        result = await eval_func(**kwargs)
+        
+        score, report, tech_details = result
+        
         return {
             "section": section_key,
             "score": score,

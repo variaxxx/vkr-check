@@ -1,45 +1,35 @@
 import re
 from typing import Tuple, Dict, List
-
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+import asyncio
 
 from src.services.llm_service import LLMService
 
-
 class ApplicationChecker:
     def __init__(self, llm_service: LLMService):
-        self.llm = llm_service.get_llm()
+        self.llm_service = llm_service
 
-    def evaluate(self,  chunks: List[Dict]) -> Tuple[int, str, Dict]:
+    async def evaluate(self, chunks: List[Dict]) -> Tuple[int, str, Dict]:
         """
-        Проверяет правильность приложения
+        Проверяет правильность приложения (асинхронно)
         """
 
+        context_list = [i["title"] + "\n" + i["text"] for i in chunks if i.get("category") == "application"]
+        context_text = "\n".join(context_list)
 
-        ## тут из классифицированных чанков.
-        context: List = [i["title"] + "\n" +i["text"] for i in chunks if i.get("category") == "application"]
-
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system", """
+        system_prompt = """
 Ты — строгий эксперт по проверке ВКР.
 Проверяй приложение ТОЛЬКО по методическим указаниям.
 Каждое слово требований важно.
-Если элемент отсутствует или выражен неявно - считай, что он НЕ выполнен.
 Обязательно указывай расхождения.
 Отвечай строго по шаблону.
 """
-                ),
 
-                    ("user", 
-"""Текст приложений:
-{context}
+        user_content = """Текст приложений:
+{context_text}
 
 Методические требования к оформлению приложений:
 1. Указано слово «Приложение» и тематический заголовок.
-2. В приложении отсутствуют список литературы, справочные комментарии и примечания.
+2. В приложении должны отсутствовать список литературы, комментарии и примечания.
 3. Содержание соответствует справочному характеру (например: копии документов, таблицы, графики, акты, программный код).
 
 Важно: 
@@ -53,18 +43,19 @@ class ApplicationChecker:
 - ...
 - ...
 Обоснование: [2–3 предложения]
-""",
-                ),
-            ]
+"""
+
+        prompt_template = self.llm_service.create_text_prompt(
+            user_text=user_content,
+            system_prompt=system_prompt
         )
 
-        chain = (
-            prompt
-            | self.llm.bind(max_tokens=1024, temperature=0)
-            | StrOutputParser()
+        result = await self.llm_service.llm_text_request(
+            prompt=prompt_template,
+            template_dict={"context_text":context_text},
+            max_tokens=1024,
+            temperature=0.1
         )
-
-        result = chain.invoke({"context": "\n".join(context)})
 
         return self._parse_result(result)
 
@@ -72,3 +63,4 @@ class ApplicationChecker:
         score_match = re.search(r"Балл: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {}
+    

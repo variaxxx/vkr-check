@@ -1,8 +1,9 @@
-import base64
 import io
 import os
+import asyncio
 from io import BytesIO
 from typing import List, Tuple
+import base64 
 
 import supervision as sv
 from PIL import Image as PILImage
@@ -34,64 +35,58 @@ class MarkupPages:
         self, image: PILImage.Image, threshold: float = 0.3
     ) -> bool:
         """
-        Детектит,есть ли подписи на изображении.
-
-        :param image: Объект PIL Image или путь к изображению
-        :param threshold: Порог уверенности модели (0.0-1.0)
-        :return: bool(Есть ли подпись на изображении)
-        :raises ValueError: Если результаты не содержат детекций
+        Детектит, есть ли подписи на изображении.
         """
         if image is None:
             raise ValueError("Изображение не может быть None")
 
-        if self.verbose:
-            results = self.model(image, conf=threshold, verbose=True)
-        else:
-            results = self.model(image, conf=threshold, verbose=False)
+        results = self.model(image, conf=threshold, verbose=self.verbose)
 
         if not results or len(results) == 0:
             raise ValueError("Модель не вернула результаты")
 
         detections = sv.Detections.from_ultralytics(results[0])
+        return len(detections.xyxy) > 0
 
-        detections_list = detections.xyxy.tolist()
-        detections_list = [
-            ((int(x1), int(y1)), (int(x2), int(y2)))
-            for x1, y1, x2, y2 in detections_list
-        ]
-        return len(detections_list) > 0
-
-    def markup_pdf(self, pdf_bytes: io.BytesIO) -> Tuple[bool, List[int]]:
+    async def markup_pdf(self, pdf_bytes: io.BytesIO) -> Tuple[bool, List[int]]:
         """
         Определяет везде ли есть подписи на изображении.
-        return: bool
+        Теперь работает асинхронно.
         """
 
         pages = self.doc_processor.get_pages_as_base64(pdf_bytes, 1, 25)
+        
         pages_images = [base64_to_image(page) for page in pages]
-        pages_indeces = [
+        
+        pages_indices = [
             i for i, page in enumerate(pages_images) if self.sign_detect(page)
         ]
-        pages_markup = [pages[i] for i in pages_indeces]
-        count = len(pages_indeces)
+        
+        count = len(pages_indices)
         if count == 0:
             return False, []
-        c: int = 0
-        for b64 in pages_markup:
-            content = [
-                {
-                    "type": "text",
-                    "text": "Определи, везде ли на этом изображении проставлены подписи рядом с фамилиями(Оценивай нестрого)? Ответь '1', "
-                    "если проставлены все подписи(блок без фамилии не считается за отсутствие подписи), либо '0', если не все подписи проставлены. "
-                    "Важно: Если стоит пустой блок и нет фамилии, то это '1', если стоит пустой блок и рядом есть фамилия, то это '0', если стоит фамилия без блока, то это '1'",
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
-                },
-            ]
-            answer = self.llm_service.invoke_vision(content)
+
+        prompt_text = (
+            "Определи, везде ли на этом изображении проставлены подписи рядом с фамилиями(Оценивай нестрого)? "
+            "Ответь '1', если проставлены все подписи(блок без фамилии не считается за отсутствие подписи), "
+            "либо '0', если не все подписи проставлены. "
+            "Важно: Если стоит пустой блок и нет фамилии, то это '1', если стоит пустой блок и рядом есть фамилия, "
+            "то это '0', если стоит фамилия без блока, то это '1'"
+        )
+
+        success_count = 0
+        
+        for idx in pages_indices:
+            b64_image = pages[idx]
+            
+            messages = self.llm_service.create_vision_prompt(
+                user_text=prompt_text,
+                pages=[b64_image]
+            )
+            
+            answer = await self.llm_service.llm_vision_request(messages)
+            
             if "1" in answer:
-                c += 1
-        #
-        return count == c, pages_indeces
+                success_count += 1
+
+        return count == success_count, pages_indices

@@ -1,9 +1,7 @@
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 from langchain_community.vectorstores import FAISS
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
 
 from .llm_service import LLMService
 from .rag import RAGEngine
@@ -11,17 +9,17 @@ from .rag import RAGEngine
 
 class VKRConclusionChecker:
     def __init__(self, llm_service: LLMService, rag_engine: RAGEngine):
-        self.llm = llm_service.get_llm()
+        self.llm_service = llm_service
         self.rag_engine = rag_engine
 
-    def evaluate(
+    async def evaluate(
         self,
         vector_db: FAISS,
         task_points: List[str],
         is_collective: bool = False,
     ) -> Tuple[int, str]:
         """
-        Проверяет заключение ВКР с учётом поставленных задач
+        Проверяет заключение ВКР с учётом поставленных задач (асинхронно)
         """
 
         docs = self.rag_engine.retrieve_relevant_chunks(
@@ -43,23 +41,17 @@ class VKRConclusionChecker:
             else "Работа не является коллективной."
         )
 
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """
+        system_prompt = """
 Ты - эксперт по проверке заключений ВКР. 
 Проверяй строго по методическим указаниям. 
 Если пункт отсутствует - это нарушение. 
 Не додумывай за автора. 
 Отвечай строго по шаблону.
-""",
-                ),
-                (
-                    "user",
-                    f"""
+"""
+
+        user_text = """
 Текст заключения:
-{{context}}
+{context}
 
 Поставленные задачи ВКР:
 {formatted_tasks}
@@ -81,21 +73,23 @@ class VKRConclusionChecker:
 - ...
 - ...
 Обоснование: [2–3 предложения]
-""",
-                ),
-            ]
+"""
+
+        prompt = self.llm_service.create_text_prompt(
+            user_text=user_text, 
+            system_prompt=system_prompt
         )
 
-        chain = (
-            prompt
-            | self.llm.bind(max_tokens=600, temperature=0)
-            | StrOutputParser()
+        result = await self.llm_service.llm_text_request(
+            prompt=prompt,
+            template_dict={"context": context, "formatted_tasks":formatted_tasks, "collective_note":collective_note},
+            max_tokens=1024,
+            temperature=0.1
         )
 
-        result = chain.invoke({"context": context})
         return self._parse_result(result)
 
-    def _parse_result(self, text: str) -> Tuple[int, str]:
+    def _parse_result(self, text: str) -> Tuple[int, str, Dict]:
         score_match = re.search(r"Балл:\s*(\d+)", text)
         score = int(score_match.group(1)) if score_match else 0
         return score, text, {}

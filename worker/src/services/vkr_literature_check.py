@@ -1,45 +1,37 @@
 import re
 from typing import Dict, List, Tuple
 
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-
 from src.services.llm_service import LLMService
 
 
 class LiteratureChecker:
     def __init__(self, llm_service: LLMService):
-        self.llm = llm_service.get_llm()
+        self.llm_service = llm_service
 
     def _check_links(self, classified_chunks: List[Dict]) -> bool:
         """Топорная логика на наличие ссылок в списке литературы"""
         counter: int = 0
-        for _, chunk in enumerate(classified_chunks):
+        for chunk in classified_chunks:
             text = chunk.get("text", "")
             refs = re.findall(r"\[(\d+)\]", text)
             counter += len(refs)
         return counter > 0
 
-    def evaluate(self, chunks: List[Dict]) -> Tuple[int, str, Dict[str, bool]]:
+    async def evaluate(self, chunks: List[Dict]) -> Tuple[int, str, Dict[str, bool]]:
         """
-        Проверяет правильность списка литературы
+        Проверяет правильность списка литературы (Асинхронно)
         """
 
-        context: List = [i["text"] for i in chunks if i.get("category") == "biblio"]
+        context_text = "\n".join([i["text"] for i in chunks if i.get("category") == "biblio"])
         
-        prompt = ChatPromptTemplate.from_messages(
-            [
-    (
-        "system", """
+        system_msg = """
 Ты — строгий эксперт-нормоконтролер ВКР. Твоя задача: проверить список литературы на соответствие жестким правилам оформления.
 Проверяй текст ТОЛЬКО по приведенным методическим указаниям. Каждая точка, пробел и сокращение имеют значение.
 Если из-за обрезки текста элемент (например, дата обращения или номер страницы) отсутствует — фиксируй это как потенциальное нарушение или неполноту данных.
 Отвечай строго по шаблону. Пиши только текст, без маркауна и специальных символов.
 """
-    ),
-    (
-        "user", 
-"""Текст списка литературы:
+        user_template = """Текст списка литературы:
 {context}
 
 Методические требования к оформлению литературы:
@@ -58,17 +50,19 @@ class LiteratureChecker:
 - [наиболее частые нарушения пунктов ]
 - ...
 Обоснование: [2–3 предложения по общей картине качества оформления и критичности ошибок].
-""",
-        ),
-    ])
+"""
 
-        chain = (
-            prompt
-            | self.llm.bind(max_tokens=2048, temperature=0.1)
-            | StrOutputParser()
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_msg),
+            ("user", user_template)
+        ])
+
+        result = await self.llm_service.llm_text_request(
+            prompt=prompt,
+            template_dict={"context": context_text},
+            temperature=0.1,
+            max_tokens=2048
         )
-
-        result = chain.invoke({"context": "\n".join(context)})
 
         links_status = bool(self._check_links(chunks))
 

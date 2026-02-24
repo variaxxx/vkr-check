@@ -25,6 +25,9 @@ from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
 from src.services.vkr_annotation_checker import VKRAnnotationChecker
 
+import asyncio
+
+
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/pdf",
@@ -68,79 +71,87 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     print(f"[DEBUG] Start processing doc: {doc_id}")
 
     try:
-        # Загрузка файла
         bucket_name, object_name = doc.file_url.split("/", 1)
         obj_stat = minio.client.stat_object(bucket_name, object_name)
         doc_service.set_context(obj_stat.content_type)
         file_response = minio.client.get_object(bucket_name, object_name)
         file_buffer = io.BytesIO(file_response.read())
         print("[DEBUG] File loaded from Minio")
+        
+        raw_chunks = doc_service.get_structured_text(file_buffer)
 
-        # Проверка подписей (только PDF)
-        status: bool = False
-        pages_indexes: List[int] = []
-        if doc_service.is_pdf():
-            status, pages_indexes = sign_verify.markup_pdf(file_buffer)
+        async def run_async_tasks():
+            results = await asyncio.gather(
+                task_parser.get_task_points(file_buffer),
+                info_parser.get_fio(file_buffer),
+                info_parser.get_theme(file_buffer),
+                header_classifier.classify_headers(raw_chunks),
+                sign_verify.markup_pdf(file_buffer)
+            )
+            
+            status, pages_indexes = results[4]
 
+            return results[0], results[1], results[2], results[3], status, pages_indexes
+
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        (task_points, fio_list, theme, classified_chunks, status, pages_indexes) = loop.run_until_complete(run_async_tasks())
 
         signs_verification = {"signs_status_code": status}
+        
         print(f"[DEBUG] Signs verification status code: {status}")
-        print(f"[DEBUG] Model's answer(показывает индексы страниц, которые в обработке у модели): ", pages_indexes)
+        print(f"[DEBUG] Model's answer: ", pages_indexes)
 
-        task_points = task_parser.get_task_points(file_buffer)
-        file_buffer.seek(0)
-        fio_list = info_parser.get_fio(file_buffer)
-        file_buffer.seek(0)
-        theme = info_parser.get_theme(file_buffer)
-        file_buffer.seek(0)
-        print(f"[DEBUG] Info parsed: FIO={len(fio_list)}, Points={len(task_points)}")
-
-        # Структурирование и RAG
-        raw_chunks = doc_service.get_structured_text(file_buffer)
-        classified_chunks = header_classifier.classify_headers(raw_chunks)
         vector_db = rag_engine.create_vector_db(classified_chunks)
         print(f"[DEBUG] Vector DB created. Chunks: {len(raw_chunks)}")
-
-        task_points = task_parser.get_task_points(file_buffer)
-
-        # Оценка ЗАДАНИЯ
-        task_evaluations = []
-        for point in task_points:
-            score, reason = vkr_analyzer.evaluate_point(point, vector_db)
-            task_evaluations.append({"task_point": point, "score": score, "justification": reason})
-        print("[DEBUG] Task evaluation done")
-
-        # Проверка структуры
         eval_structure = check_structure(classified_chunks)
         print(f"[DEBUG] Structure check done: {eval_structure}")
 
-        # Оценки разделов (Приложение, Литература, Введение, Заключение, Аннотации)
-        application_evaluations = run_evaluation('application', eval_structure, application_checker.evaluate, chunks=classified_chunks)
-        print("[DEBUG] Application evaluated")
+        async def run_analysis():
+            static_tasks = [
+                run_evaluation('application', eval_structure, application_checker.evaluate, chunks=classified_chunks),
+                run_evaluation('literature', eval_structure, literature_checker.evaluate, chunks=classified_chunks),
+                run_evaluation('introduction', eval_structure, intro_checker.evaluate, vector_db=vector_db, total_doc_volume=len(raw_chunks)),
+                run_evaluation('conclusion', eval_structure, conclusion_checker.evaluate, vector_db=vector_db, task_points=task_points, is_collective=len(fio_list) > 1),
+                run_evaluation('annotation', eval_structure, annotation_checker.evaluate, chunks=classified_chunks)
+            ]
+            
+            point_tasks = [vkr_analyzer.evaluate_point(point, vector_db) for point in task_points]
+                        
+            results = await asyncio.gather(*static_tasks, *point_tasks)
+            
+            evaluations = results[:5]
+            
+            point_results = results[5:]
+            
+            task_evaluations = []
+            for point, result in zip(task_points, point_results):
+                if isinstance(result, (tuple, list)) and len(result) == 2:
+                    score, reason = result
+                else:
+                    score, reason = 0, f"Unexpected return format: {result}"
+                    
+                task_evaluations.append({
+                    "task_point": point, 
+                    "score": score, 
+                    "justification": reason
+                })
+            
+            print("[DEBUG] Task evaluation done")
+            return evaluations, task_evaluations
+        
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        evaluations, task_evaluations = loop.run_until_complete(run_analysis())
 
-        literature_evaluations = run_evaluation('literature', eval_structure, literature_checker.evaluate, chunks=classified_chunks)
-        print("[DEBUG] Literature evaluated")
-
-        intro_evaluations = run_evaluation('introduction', eval_structure, intro_checker.evaluate, vector_db=vector_db, total_doc_volume=len(raw_chunks))
-        print("[DEBUG] Introduction evaluated")
-
-        conclusion_evaluations = run_evaluation('conclusion', eval_structure, conclusion_checker.evaluate, vector_db=vector_db, task_points=task_points, is_collective=len(fio_list) > 1)
-        print("[DEBUG] Conclusion evaluated")
-
-        annotation_evaluations = run_evaluation('annotation', eval_structure, annotation_checker.evaluate, chunks=classified_chunks)
-        print("[DEBUG] Annotations evaluated")
-        print(annotation_evaluations)
-        # ОТЧЕТ
-        evaluations = [
-            application_evaluations,
-            literature_evaluations,
-            intro_evaluations,
-            conclusion_evaluations,
-            annotation_evaluations
-        ]
-
-        # Генерация отчета
-        evaluations = [application_evaluations, literature_evaluations, intro_evaluations, conclusion_evaluations]
         info_data = {"students": fio_list, "theme": theme}
         report_dict: Dict[str, Any] = vkr_report.generate_report(info_data, task_evaluations, signs_verification, evaluations)
         print("[DEBUG] Report generated")
