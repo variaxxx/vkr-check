@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from "@angular/core";
+import { Icon } from "@shared/components/icon/icon";
 
 import { EvaluationItem, EvaluationSection } from "../../../../dto";
-import { Icon } from "@shared/components/icon/icon";
 
 @Component({
   selector: "app-evaluations-list",

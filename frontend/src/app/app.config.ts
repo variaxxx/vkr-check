@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from "@angular/common/http";
 import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from "@angular/core";
+import { MAT_DATE_LOCALE } from "@angular/material/core";
 import { provideRouter } from "@angular/router";
 import { authInterceptor, responseDataInterceptor } from "@core/interceptors/";
 import { ErrorHandlerService } from "@core/services";
@@ -28,5 +29,6 @@ export const appConfig: ApplicationConfig = {
       },
     }),
     { provide: ErrorHandler, useClass: ErrorHandlerService },
+    { provide: MAT_DATE_LOCALE, useValue: "ru-RU" },
   ],
 };

@@ -109,6 +109,9 @@ class DocumentService:
                 media_type=headers.get(
                     "Content-Type", "application/octet-stream"
                 ),
+                headers={
+                    "Content-Disposition": f'attachment; filename="{document.original_name}"'
+                },
             )
         except S3Error:
             raise HTTPException(404, "File not found")

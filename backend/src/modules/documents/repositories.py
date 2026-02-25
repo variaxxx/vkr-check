@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy import and_, desc, func, select, text
@@ -60,6 +61,35 @@ class DocumentRepository:
             query = query.limit(limit)
         if offset is not None:
             query = query.offset(offset)
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_all_processed(
+        self,
+        user_id: Optional[uuid.UUID] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+    ) -> List[Document]:
+        where = [
+            Document.status.in_(
+                [DocumentStatus.APPROVED, DocumentStatus.REJECTED]
+            ),
+        ]
+
+        if user_id is not None:
+            where.append(Document.user_id == user_id)
+        if from_date is not None:
+            where.append(Document.created_at >= from_date)
+        if to_date is not None:
+            where.append(Document.created_at <= to_date)
+
+        query = (
+            select(Document)
+            .options(selectinload(Document.authors))
+            .order_by(desc(Document.created_at))
+            .where(and_(*where))
+        )
 
         result = await self.db.execute(query)
         return result.scalars().all()

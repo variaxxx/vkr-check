@@ -21,7 +21,7 @@
         @for (doc of documents() ?? [null, null, null, null, null, null, null, null, null, null]; track $index) {
           <tr
             class="cursor-pointer hover:bg-neutral-100 transition-colors"
-            [routerLink]="doc ? ['..', 'docs', doc.id] : []"
+            [routerLink]="doc ? ['..', 'documents', doc.id] : []"
           >
             <td
               class="px-6 py-4 whitespace-nowrap"

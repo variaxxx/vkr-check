@@ -1,0 +1,53 @@
+:host {
+  display: block;
+}
+
+::ng-deep .mat-datepicker-content-container {
+  margin-top: 0.25rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  border-width: 0.125rem;
+  border-color: var(--color-neutral-200);
+
+  .mat-calendar-body-selected {
+    background-color: var(--color-blue-200);
+  }
+
+  .mat-calendar-body-in-range::before {
+    background-color: var(--color-blue-100);
+  }
+
+  .mat-calendar-body-today {
+    border-color: var(--color-blue-600) !important;
+    border-width: 0.125rem;
+  }
+
+  .mat-calendar-body-in-preview {
+    color: none;
+  }
+}
+
+::ng-deep .mat-mdc-text-field-wrapper {
+  border-radius: 0.5rem !important;
+  border-width: 0.125rem;
+  border-color: var(--color-neutral-200);
+
+  .mdc-line-ripple::before, .mdc-line-ripple::after {
+    display: none;
+  }
+}
+
+::ng-deep .mdc-tooltip {
+  background-color: white;
+  border-width: 0.0625rem;
+  border-radius: 0.25rem;
+  border-color: var(--color-neutral-200);
+}
+
+::ng-deep mat-label {
+  color: var(--color-neutral-600)
+}
+
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  height: 0;
+}
