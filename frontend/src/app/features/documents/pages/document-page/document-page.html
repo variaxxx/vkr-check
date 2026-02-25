@@ -32,7 +32,7 @@
         </a>
       </div>
 
-      @if (doc.status === "success") {
+      @if (["approved", "rejected"].includes(doc.status)) {
         <div class="flex flex-col gap-6 p-6">
           <div>
             <h4 class="text-sm font-medium uppercase text-neutral-500 tracking-wider mb-2">Авторы</h4>

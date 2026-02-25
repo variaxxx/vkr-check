@@ -1,5 +1,6 @@
 import { DocumentStatus } from "../../../shared/enums";
 import { DocumentAnalysisResult } from "./document-analysis-result";
+import { DocumentAuthor } from "./document-author";
 
 export interface DocumentResponse {
   id: string;
@@ -7,7 +8,7 @@ export interface DocumentResponse {
   processed_at: Date | null;
   original_name: string;
   status: DocumentStatus;
-  authors: string[] | null;
+  authors: DocumentAuthor[] | null;
   topic: string | null;
   score: number | null;
   result: DocumentAnalysisResult | null;

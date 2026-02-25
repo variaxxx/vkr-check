@@ -30,8 +30,9 @@ export class HistoryPage implements OnInit {
     { label: "Все статусы", value: "" },
     { label: "Загружен", value: DOCUMENT_STATUS.UPLOADED },
     { label: "В обработке", value: DOCUMENT_STATUS.IN_PROCESSING },
-    { label: "Успешно", value: DOCUMENT_STATUS.SUCCESS },
     { label: "Ошибка", value: DOCUMENT_STATUS.FAILED },
+    { label: "Зачёт", value: DOCUMENT_STATUS.APPROVED },
+    { label: "Незачёт", value: DOCUMENT_STATUS.REJECTED },
   ];
 
   public form = new FormGroup({
@@ -68,7 +69,7 @@ export class HistoryPage implements OnInit {
     combineLatest([
       this.form.valueChanges.pipe(
         startWith(this.form.value),
-        debounceTime(500),
+        debounceTime(300),
         distinctUntilChanged(
           (a, b) => JSON.stringify(a) === JSON.stringify(b),
         ),
