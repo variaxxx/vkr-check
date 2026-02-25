@@ -1,6 +1,5 @@
 import re
-import asyncio
-from typing import Tuple, List, Dict
+from typing import Dict, List, Tuple
 
 from .llm_service import LLMService
 from .rag import RAGEngine
@@ -21,13 +20,13 @@ class VKRAnnotationChecker:
 
         len_ru = len(context_ru)
         len_en = len(context_en)
-        
+
         violations = []
         if len_ru > 2000:
             violations.append(f"Превышен объем RU: {len_ru} зн.")
         if len_en > 2000:
             violations.append(f"Превышен объем EN: {len_en} зн.")
-        
+
         volume_violation_str = "; ".join(violations) if violations else "нет"
 
         system_msg = (
@@ -72,19 +71,19 @@ class VKRAnnotationChecker:
 """
 
         prompt_template = self.llm_service.create_text_prompt(
-            user_text=user_msg, 
+            user_text=user_msg,
             system_prompt=system_msg
         )
 
         result = await self.llm_service.llm_text_request(
             prompt=prompt_template,
             template_dict={
-                "context_ru":context_ru,
-                "context_en":context_en,
-                "len_ru":len_ru,
-                "len_en":len_en,
-                "volume_violation_str":volume_violation_str
-            }, 
+                "context_ru": context_ru,
+                "context_en": context_en,
+                "len_ru": len_ru,
+                "len_en": len_en,
+                "volume_violation_str": volume_violation_str
+            },
             max_tokens=1024,
             temperature=0.1
         )

@@ -2,6 +2,7 @@ import re
 from typing import Dict, List, Tuple
 
 from langchain_core.prompts import ChatPromptTemplate
+
 from src.services.llm_service import LLMService
 
 
@@ -24,7 +25,7 @@ class LiteratureChecker:
         """
 
         context_text = "\n".join([i["text"] for i in chunks if i.get("category") == "biblio"])
-        
+
         system_msg = """
 Ты — строгий эксперт-нормоконтролер ВКР. Твоя задача: проверить список литературы на соответствие жестким правилам оформления.
 Проверяй текст ТОЛЬКО по приведенным методическим указаниям. Каждая точка, пробел и сокращение имеют значение.

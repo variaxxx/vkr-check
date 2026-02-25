@@ -1,5 +1,5 @@
 import re
-from typing import Tuple, List, Dict
+from typing import Dict, List, Tuple
 
 from langchain_community.vectorstores import FAISS
 
@@ -32,7 +32,7 @@ class VKRConclusionChecker:
         context = self.rag_engine.get_context_from_docs(docs)
 
         formatted_tasks = "\n".join(
-            [f"{i+1}. {task}" for i, task in enumerate(task_points)]
+            [f"{i + 1}. {task}" for i, task in enumerate(task_points)]
         )
 
         collective_note = (
@@ -76,13 +76,13 @@ class VKRConclusionChecker:
 """
 
         prompt = self.llm_service.create_text_prompt(
-            user_text=user_text, 
+            user_text=user_text,
             system_prompt=system_prompt
         )
 
         result = await self.llm_service.llm_text_request(
             prompt=prompt,
-            template_dict={"context": context, "formatted_tasks":formatted_tasks, "collective_note":collective_note},
+            template_dict={"context": context, "formatted_tasks": formatted_tasks, "collective_note": collective_note},
             max_tokens=1024,
             temperature=0.1
         )

@@ -1,9 +1,8 @@
+import base64
 import io
 import os
-import asyncio
 from io import BytesIO
 from typing import List, Tuple
-import base64 
 
 import supervision as sv
 from PIL import Image as PILImage
@@ -55,13 +54,13 @@ class MarkupPages:
         """
 
         pages = self.doc_processor.get_pages_as_base64(pdf_bytes, 1, 25)
-        
+
         pages_images = [base64_to_image(page) for page in pages]
-        
+
         pages_indices = [
             i for i, page in enumerate(pages_images) if self.sign_detect(page)
         ]
-        
+
         count = len(pages_indices)
         if count == 0:
             return False, []
@@ -75,17 +74,17 @@ class MarkupPages:
         )
 
         success_count = 0
-        
+
         for idx in pages_indices:
             b64_image = pages[idx]
-            
+
             messages = self.llm_service.create_vision_prompt(
                 user_text=prompt_text,
                 pages=[b64_image]
             )
-            
+
             answer = await self.llm_service.llm_vision_request(messages)
-            
+
             if "1" in answer:
                 success_count += 1
 

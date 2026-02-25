@@ -1,11 +1,12 @@
-import asyncio
-from typing import List, Dict, Union
+from typing import List, Union
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
 from src.core.config import Settings
+
 
 class LLMService:
     def __init__(self, config: Settings):
@@ -23,7 +24,7 @@ class LLMService:
         if template_dict:
             for i in template_dict:
                 template_dict[i] = str(template_dict[i]).replace("{", " ").replace("}", " ")
-        
+
         chain = prompt | self.llm.bind(**kwargs) | StrOutputParser()
 
         try:
@@ -44,7 +45,7 @@ class LLMService:
         except Exception as e:
             print(f"Ошибка асинхронного vision запроса: {str(e)}")
             return ""
-    
+
     @staticmethod
     def create_text_prompt(user_text: str, system_prompt: str = None) -> ChatPromptTemplate:
         """Создает промпт для текстового запроса (синхронный метод)"""
@@ -53,10 +54,10 @@ class LLMService:
 
         if system_prompt:
             messages.append(("system", system_prompt))
-        
+
         messages.append(("user", user_prompt))
         return ChatPromptTemplate.from_messages(messages)
-    
+
     @staticmethod
     def create_vision_prompt(user_text: str, pages: List[str], system_prompt: str = None) -> List[Union[SystemMessage, HumanMessage]]:
         """Создает промпт для vision запроса (синхронный метод)"""
@@ -67,7 +68,7 @@ class LLMService:
 
         human_content = [
             {
-                "type": "text", 
+                "type": "text",
                 "text": f"{user_text}"
             }
         ]
@@ -77,6 +78,6 @@ class LLMService:
                 "type": "image_url",
                 "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
             })
-        
+
         messages.append(HumanMessage(content=human_content))
         return messages

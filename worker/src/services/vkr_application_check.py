@@ -1,8 +1,8 @@
 import re
-from typing import Tuple, Dict, List
-import asyncio
+from typing import Dict, List, Tuple
 
 from src.services.llm_service import LLMService
+
 
 class ApplicationChecker:
     def __init__(self, llm_service: LLMService):
@@ -52,7 +52,7 @@ class ApplicationChecker:
 
         result = await self.llm_service.llm_text_request(
             prompt=prompt_template,
-            template_dict={"context_text":context_text},
+            template_dict={"context_text": context_text},
             max_tokens=1024,
             temperature=0.1
         )
@@ -63,4 +63,3 @@ class ApplicationChecker:
         score_match = re.search(r"Балл: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {}
-    

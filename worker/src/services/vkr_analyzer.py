@@ -1,10 +1,11 @@
 import re
-import asyncio
-from typing import Tuple, List, Dict
+from typing import Tuple
+
 from langchain_community.vectorstores import FAISS
 
 from .llm_service import LLMService
 from .rag import RAGEngine
+
 
 class VKRAnalyzer:
     def __init__(self, llm_service: LLMService, rag_engine: RAGEngine):
@@ -31,8 +32,7 @@ class VKRAnalyzer:
 Оцени, раскрыт ли пункт в тексте (0 - пункт вообще не упоминается в тексте, 10 - пункт полностью раскрыт в тексте). 
 Отвечай строго по шаблону.
 Не пиши вступлений."""
-        
-        
+
         user_text = """
 Пункт задания: {task_point}
 Контекст: {context}
@@ -43,13 +43,13 @@ class VKRAnalyzer:
 """
 
         prompt_template = self.llm_service.create_text_prompt(
-            user_text=user_text, 
+            user_text=user_text,
             system_prompt=system_prompt
         )
 
         result = await self.llm_service.llm_text_request(
             prompt=prompt_template,
-            template_dict={"task_point":task_point, "context":context}, 
+            template_dict={"task_point": task_point, "context": context},
             max_tokens=512,
             temperature=0
         )

@@ -21,16 +21,16 @@ class VKRReport:
             }
 
         avg_task_score = sum(total_scores) / len(total_scores)
-        
+
         application_ev = [e for e in evaluations if e.get("section") == "application"][0]
-        
+
         total_ev_scores = [e.get("score", 0) for e in evaluations if e.get("section") != "application"]
-        
+
         if application_ev.get("found") == 1:
             avg_score = (avg_task_score + sum(total_ev_scores) + application_ev.get("score")) / (len(evaluations) + 1)
         else:
             avg_score = (avg_task_score + sum(total_ev_scores)) / len(evaluations)
-            
+
         return {
             "average_score": round(avg_score, 2),
             "compliance_percentage": round(avg_score * 10, 1),
