@@ -17,6 +17,7 @@ from src.services.vkr_conclusion_checker import VKRConclusionChecker
 from src.services.vkr_intro_checker import VKRIntroductionChecker
 from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
+from src.services.vkr_annotation_checker import VKRAnnotationChecker
 
 
 class ServicesProvider(Provider):
@@ -43,3 +44,4 @@ class ServicesProvider(Provider):
     sign_detection = provide(MarkupPages, scope=Scope.APP)
     application_checker = provide(ApplicationChecker, scope=Scope.APP)
     literature_checker = provide(LiteratureChecker, scope=Scope.APP)
+    annotation_checker = provide(VKRAnnotationChecker, scope=Scope.APP)

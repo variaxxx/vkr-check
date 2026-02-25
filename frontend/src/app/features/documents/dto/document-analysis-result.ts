@@ -6,7 +6,6 @@ export interface DocumentAnalysisResult {
     students: string[];
     theme: string;
   };
-  analysis: AnalysisPoint[];
   summary: {
     average_score: number;
     compliance_percentage: number;
@@ -15,14 +14,8 @@ export interface DocumentAnalysisResult {
   signs_verification: {
     signs_status_code: boolean;
   };
+  analysis: AnalysisPoint[];
   evaluations: EvaluationItem[];
-}
-
-export interface EvaluationItem {
-  section: EvaluationSection;
-  score: number;
-  details: string;
-  if_links_exists?: boolean;
 }
 
 export interface AnalysisPoint {
@@ -31,4 +24,14 @@ export interface AnalysisPoint {
   justification: string;
 }
 
-export type EvaluationSection = "introduction" | "application" | "literature" | "conclusion";
+export interface EvaluationItem {
+  found: boolean;
+  section: EvaluationSection;
+  score: number;
+  details: string;
+  tech_details: {
+    if_links_exists?: boolean;
+  };
+}
+
+export type EvaluationSection = "introduction" | "application" | "literature" | "conclusion" | "annotation";

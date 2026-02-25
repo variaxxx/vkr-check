@@ -133,7 +133,7 @@ class PDFProcessor(BaseProcessor):
     ) -> List[str]:
         pdf_file.seek(0)
         images = convert_from_bytes(
-            pdf_file.read(), first_page=first_page, last_page=last_page, dpi=130
+            pdf_file.read(), first_page=first_page, last_page=last_page, dpi=200
         )
         encoded = []
         for img in images:

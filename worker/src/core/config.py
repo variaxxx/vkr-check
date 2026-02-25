@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # rag
     CHUNK_SIZE: int = 1000
     CHUNK_OVERLAP: int = 150
-    K_RETRIEVALS: int = 5
+    K_RETRIEVALS: int = 10
 
     # celery
     CELERY_BROKER_URL: str
