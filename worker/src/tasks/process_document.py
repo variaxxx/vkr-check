@@ -159,10 +159,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
                 ),
             ]
 
-            point_tasks = [
-                vkr_analyzer.evaluate_point(point, vector_db)
-                for point in task_points
-            ]
+            point_tasks = [vkr_analyzer.evaluate_point(point, vector_db) for point in task_points]
 
             results = await asyncio.gather(*static_tasks, *point_tasks)
 
@@ -205,19 +202,24 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         # Сохранение результатов
         for student in fio_list:
             parts = student.split()
+            group_parts = student.split("-")
             author = Author(
                 last_name=parts[0] if len(parts) > 0 else "Unknown",
                 first_name=parts[1] if len(parts) > 1 else "",
-                middle_name=parts[2] if len(parts) > 2 else "",
+                middle_name=parts[2] if len(parts) > 2 else None,
+                group=group_parts[-1] if len(parts) > 1 else None,
             )
             db.add(author)
             doc.authors.append(author)
 
         doc.score = report_dict["summary"].get("average_score", 0)
-        doc.topic = (
-            theme if isinstance(theme, str) else (theme[0] if theme else "")
-        )
-        doc.status = DocumentStatus.SUCCESS
+        doc.topic = theme if isinstance(theme, str) else (theme[0] if theme else "")
+
+        if doc.score < 6:
+            doc.status = DocumentStatus.REJECTED
+        else:
+            doc.status = DocumentStatus.APPROVED
+
         doc.result = report_dict
         db.commit()
         print(f"[DEBUG] Success: {doc_id} processed")
