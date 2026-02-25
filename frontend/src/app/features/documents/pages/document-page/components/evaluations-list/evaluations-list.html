@@ -27,32 +27,36 @@
 
             <td class="px-6 py-4">
               <div class="flex flex-col gap-2 items-start space-y-2">
-                <span class="text-sm text-neutral-900 min-w-2xs">{{ e.details }}</span>
+                @if (e.found) {
+                  <span class="text-sm text-neutral-900 min-w-2xs">{{ e.details }}</span>
 
-                @if (e.section == "literature") {
-                  @if (e.tech_details.if_links_exists) {
-                    <div
-                      class="px-2.5 py-1.5 inline-flex items-center gap-2 rounded-md bg-green-100"
-                    >
-                      <app-icon icon="check" class="min-w-4 max-w-4 text-green-700"></app-icon>
-                      <span
-                        class="text-sm text-green-700 whitespace-nowrap"
+                  @if (e.section == "literature") {
+                    @if (e.tech_details.if_links_exists) {
+                      <div
+                        class="px-2.5 py-1.5 inline-flex items-center gap-2 rounded-md bg-green-100"
                       >
-                        Ссылки на источники присутствуют
-                      </span>
-                    </div>
-                  } @else {
-                    <div
-                      class="px-2.5 py-1.5 inline-flex items-center gap-2 rounded-md bg-red-100"
-                    >
-                      <app-icon icon="x" class="min-w-4 max-w-4 text-red-700"></app-icon>
-                      <span
-                        class="text-sm text-red-700 whitespace-nowrap"
+                        <app-icon icon="check" class="min-w-4 max-w-4 text-green-700"></app-icon>
+                        <span
+                          class="text-sm text-green-700 whitespace-nowrap"
+                        >
+                          Ссылки на источники присутствуют
+                        </span>
+                      </div>
+                    } @else {
+                      <div
+                        class="px-2.5 py-1.5 inline-flex items-center gap-2 rounded-md bg-red-100"
                       >
-                        Ссылки на источники отсутствуют
-                      </span>
-                    </div>
+                        <app-icon icon="x" class="min-w-4 max-w-4 text-red-700"></app-icon>
+                        <span
+                          class="text-sm text-red-700 whitespace-nowrap"
+                        >
+                          Ссылки на источники отсутствуют
+                        </span>
+                      </div>
+                    }
                   }
+                } @else {
+                  <span class="text-sm text-red-700 min-w-2xs">Раздел не найден</span>
                 }
               </div>
             </td>
