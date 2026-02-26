@@ -1,7 +1,7 @@
 import { HttpEvent, HttpHandlerFn, HttpRequest } from "@angular/common/http";
 import { inject } from "@angular/core";
 import { Router } from "@angular/router";
-import { BehaviorSubject, catchError, filter, Observable, switchMap, tap, throwError } from "rxjs";
+import { BehaviorSubject, catchError, EMPTY, filter, Observable, switchMap, tap, throwError } from "rxjs";
 
 import { env } from "../../../environments/environment";
 import { AuthService, NotificationService } from "../services";
@@ -18,8 +18,10 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
       catchError((err) => {
         if (err.status === 0) {
           notificationService.error("В данный момент сервер недоступен");
+          return EMPTY;
         } else if (err.status === 403) {
           notificationService.error("У Вас нет доступа");
+          return EMPTY;
         }
 
         return throwError(() => err);
@@ -37,8 +39,10 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
 
       if (err.status === 0) {
         notificationService.error("В данный момент сервер недоступен");
+        return EMPTY;
       } else if (err.status === 403) {
         notificationService.error("У Вас нет доступа");
+        return EMPTY;
       }
 
       return throwError(() => err);

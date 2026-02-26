@@ -8,6 +8,6 @@ export class ErrorHandlerService implements ErrorHandler {
 
   handleError(error: any): void {
     this.notificationService.error("Что-то пошло не так");
-    console.error(ErrorHandlerService.name, { error });
+    console.error(error);
   }
 }

@@ -31,7 +31,7 @@ def upgrade():
     SET search_vector =
         to_tsvector(
             'russian',
-            last_name || ' ' || first_name || ' ' || coalesce(middle_name, '')
+            last_name || ' ' || first_name || ' ' || coalesce(middle_name, '') || ' ' || coalesce("group", '')
         )
     """)
 
@@ -46,7 +46,7 @@ def upgrade():
       NEW.search_vector :=
         to_tsvector(
           'russian',
-          NEW.last_name || ' ' || NEW.first_name || ' ' || coalesce(NEW.middle_name, '')
+          NEW.last_name || ' ' || NEW.first_name || ' ' || coalesce(NEW.middle_name, '')  || ' ' || coalesce(NEW."group", '')
         );
       RETURN NEW;
     END;

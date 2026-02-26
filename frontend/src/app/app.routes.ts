@@ -17,12 +17,12 @@ export const routes: Routes = [
         loadComponent: () => import("./features/home/home").then(m => m.Home),
       },
       {
-        path: "history",
-        loadComponent: () => import("./features/documents/pages/history-page/history-page").then(m => m.HistoryPage),
+        path: "documents",
+        loadChildren: () => import("./features/documents/documents.routes"),
       },
       {
-        path: "docs/:docId",
-        loadComponent: () => import("./features/documents/pages/document-page/document-page").then(m => m.DocumentPage),
+        path: "reports",
+        loadChildren: () => import("./features/reports/reports.routes"),
       },
     ],
   },

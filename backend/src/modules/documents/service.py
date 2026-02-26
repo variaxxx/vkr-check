@@ -9,11 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.celery import worker
 from src.common.schemas import FindManyResponse, TokenUserInfo
 from src.common.utils import clamp
-from src.infra.db.models import Author, Document, DocumentStatus
+from src.infra.db.models import Document, DocumentStatus
 from src.infra.minio import MinioService
 
 from .repositories import DocumentRepository
 from .schemas import (
+    DocumentAuthor,
     DocumentResponse,
     DocumentShortResponse,
     UploadDocumentResponse,
@@ -108,6 +109,9 @@ class DocumentService:
                 media_type=headers.get(
                     "Content-Type", "application/octet-stream"
                 ),
+                headers={
+                    "Content-Disposition": f'attachment; filename="{document.original_name}"'
+                },
             )
         except S3Error:
             raise HTTPException(404, "File not found")
@@ -151,6 +155,7 @@ class DocumentService:
         user: TokenUserInfo,
         limit: Optional[int],
         offset: Optional[int],
+        status: Optional[DocumentStatus],
     ) -> FindManyResponse[DocumentShortResponse]:
         if not len(query):
             raise HTTPException(401, "Empty query provided")
@@ -159,10 +164,16 @@ class DocumentService:
         offset = max(0, offset) if offset is not None else 0
 
         docs = await self.doc_repo.search(
-            query=query, user_id=user.id, limit=limit, offset=offset
+            query=query,
+            user_id=user.id,
+            limit=limit,
+            offset=offset,
+            status=status,
         )
 
-        total = await self.doc_repo.search_total(query=query, user_id=user.id)
+        total = await self.doc_repo.search_total(
+            query=query, user_id=user.id, status=status
+        )
         items = [self._to_short_response(doc) for doc in docs]
 
         return FindManyResponse[DocumentShortResponse](
@@ -177,20 +188,11 @@ class DocumentService:
             created_at=doc.created_at,
             processed_at=doc.processed_at,
             original_name=doc.original_name,
-            status=DocumentStatus[doc.status]
-            if isinstance(doc.status, str)
-            else doc.status,
+            status=self._to_status(doc.status),
             result=doc.result,
             topic=doc.topic,
             score=doc.score,
-            authors=[
-                f"{a.last_name} {a.first_name} {a.middle_name}"
-                if isinstance(a, Author)
-                else f"{a['last_name']} {a['first_name']} {a['middle_name']}"
-                for a in doc.authors
-            ]
-            if doc.authors
-            else None,
+            authors=[self._to_author(a) for a in doc.authors] or None,
         )
 
     def _to_short_response(self, doc) -> DocumentShortResponse:
@@ -198,17 +200,24 @@ class DocumentService:
             id=doc.id,
             created_at=doc.created_at,
             original_name=doc.original_name,
-            status=DocumentStatus[doc.status]
-            if isinstance(doc.status, str)
-            else doc.status,
+            status=self._to_status(doc.status),
             topic=doc.topic,
             score=doc.score,
-            authors=[
-                f"{a.last_name} {a.first_name} {a.middle_name}"
-                if isinstance(a, Author)
-                else f"{a['last_name']} {a['first_name']} {a['middle_name']}"
-                for a in doc.authors
-            ]
-            if doc.authors
-            else None,
+            authors=[self._to_author(a) for a in doc.authors] or None,
         )
+
+    def _to_author(self, a) -> DocumentAuthor:
+        def get(key, default=None):
+            return (
+                a.get(key, default)
+                if isinstance(a, dict)
+                else getattr(a, key) or default
+            )
+
+        return DocumentAuthor(
+            fio=f"{get('last_name')} {get('first_name')} {get('middle_name', '')}",
+            group=get("group", None),
+        )
+
+    def _to_status(self, status):
+        return DocumentStatus[status] if isinstance(status, str) else status

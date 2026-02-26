@@ -1,7 +1,9 @@
 import io
 from typing import List
+
 from .doc_processors import DocumentProcessorService
 from .llm_service import LLMService
+
 
 class TaskParser:
     """Класс для извлечения задания из PDF с помощью Vision (асинхронная версия)"""
@@ -14,7 +16,7 @@ class TaskParser:
         """Извлекает пункты задания из PDF асинхронно"""
 
         pages = self.doc_processor.get_pages_as_base64(pdf_bytes, 2, 4)
-        
+
         vision_prompt_text = (
             "Найди на этих сканах раздел 'Задание' и выпиши пункты требований и содержания. "
             "Если встретятся одинаковые или дублирующие друг друга пункты, верни только один из них."
@@ -25,7 +27,7 @@ class TaskParser:
         )
 
         raw_text = await self.llm_service.llm_vision_request(messages)
-        
+
         if not raw_text:
             return []
 
@@ -36,7 +38,7 @@ class TaskParser:
             f"оставь только текст каждого пункта. Убери пункты связанные с датами или сроками для сдачи.\n"
             f"Текст: {raw_text}"
         )
-        
+
         refine_prompt = self.llm_service.create_text_prompt(
             user_text=refine_user,
             system_prompt=refine_system
@@ -45,7 +47,7 @@ class TaskParser:
         refined_text = await self.llm_service.llm_text_request(refine_prompt)
 
         return [
-            p.strip() 
-            for p in refined_text.split("\n") 
+            p.strip()
+            for p in refined_text.split("\n")
             if len(p.strip()) > 10
         ]

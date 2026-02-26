@@ -25,9 +25,14 @@ export class Navbar {
       icon: "upload",
     },
     {
-      route: "history/",
+      route: "documents/",
       label: "История",
       icon: "history",
+    },
+    {
+      route: "reports/",
+      label: "Отчёты",
+      icon: "document",
     },
   ];
 }

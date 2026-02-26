@@ -8,35 +8,16 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
-    MetaData,
     Numeric,
     String,
     Table,
-    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.enums import DocumentStatus
+from src.infra.db.base import BaseModel
 
-metadata = MetaData()
-
-
-class BaseModel(DeclarativeBase):
-    __abstract__ = True
-    metadata = metadata
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    def to_dict(self):
-        return {
-            field.name: getattr(self, field.name) for field in self.__table__.c
-        }
 
 
 document_authors = Table(
@@ -56,7 +37,7 @@ class Document(BaseModel):
     file_url: Mapped[str] = mapped_column(
         String(length=512), unique=True, nullable=False
     )
-    status: Mapped[str] = mapped_column(
+    status: Mapped[DocumentStatus] = mapped_column(
         Enum(DocumentStatus), default=DocumentStatus.UPLOADED
     )
     original_name: Mapped[str] = mapped_column(
@@ -87,6 +68,7 @@ class Author(BaseModel):
     last_name: Mapped[str] = mapped_column(String(256))
     first_name: Mapped[str] = mapped_column(String(256))
     middle_name: Mapped[str] = mapped_column(String(256), nullable=True)
+    group: Mapped[str] = mapped_column(String(16), nullable=True)
     search_vector: Mapped[str] = mapped_column(TSVECTOR)
 
     documents: Mapped[List["Document"]] = relationship(

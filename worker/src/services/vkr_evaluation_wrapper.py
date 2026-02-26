@@ -7,9 +7,9 @@ async def run_evaluation(section_key, check_dict, eval_func, **kwargs):
     """
     if check_dict.get(section_key):
         result = await eval_func(**kwargs)
-        
+
         score, report, tech_details = result
-        
+
         return {
             "section": section_key,
             "score": score,

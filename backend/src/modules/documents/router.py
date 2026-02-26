@@ -53,9 +53,10 @@ async def search_document(
     user: FromDishka[TokenUserInfo],
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    status: Optional[DocumentStatus] = None,
 ) -> FindManyResponse[DocumentShortResponse]:
     return await document_service.search(
-        query=query, user=user, limit=limit, offset=offset
+        query=query, user=user, limit=limit, offset=offset, status=status
     )
 
 

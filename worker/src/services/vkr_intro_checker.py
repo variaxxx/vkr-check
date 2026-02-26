@@ -1,5 +1,5 @@
 import re
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 from langchain_community.vectorstores import FAISS
 
@@ -58,13 +58,13 @@ class VKRIntroductionChecker:
 """
 
         prompt = self.llm_service.create_text_prompt(
-            user_text=user_text, 
+            user_text=user_text,
             system_prompt=system_prompt
         )
 
         result = await self.llm_service.llm_text_request(
             prompt=prompt,
-            template_dict={"context": context, "total_doc_volume":total_doc_volume},
+            template_dict={"context": context, "total_doc_volume": total_doc_volume},
             max_tokens=1024,
             temperature=0.1
         )

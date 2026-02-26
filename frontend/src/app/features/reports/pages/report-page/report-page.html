@@ -1,0 +1,30 @@
+<div class="flex flex-col">
+  <h1 class="text-2xl font-bold mb-2 text-neutral-900">Выгрузка отчётов</h1>
+  <span class="text-md text-neutral-500 mb-8">Выгрузка Excel отчёта по проверенным ВКР</span>
+
+  <div class="flex flex-col p-6 bg-white rounded-xl border-2 border-neutral-200 divide-y-2 divide-neutral-200">
+    <div class="w-full flex flex-col ">
+      <h3 class="text-lg font-semibold mb-4">Выберите период</h3>
+
+      <mat-form-field class="max-w-sm mb-6">
+        <mat-label>Период</mat-label>
+
+        <mat-date-range-input [rangePicker]="picker" [formGroup]="range">
+          <input matStartDate placeholder="С" formControlName="start">
+          <input matEndDate placeholder="По" formControlName="end">
+        </mat-date-range-input>
+
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+    </div>
+
+    <app-button
+      (click)="download($event)"
+      class="max-w-fit mt-6 self-end"
+    >
+      <app-icon icon="download" class="min-h-5 min-w-5"></app-icon>
+      Выгрузить отчёт
+    </app-button>
+  </div>
+</div>
