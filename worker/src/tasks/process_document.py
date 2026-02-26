@@ -207,7 +207,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
                 last_name=parts[0] if len(parts) > 0 else "Unknown",
                 first_name=parts[1] if len(parts) > 1 else "",
                 middle_name=parts[2] if len(parts) > 2 else None,
-                group=group_parts[-1] if len(parts) > 1 else None,
+                group=group_parts[-1] if len(parts) > 1 and len(group_parts[-1]) < 10 else None,
             )
             db.add(author)
             doc.authors.append(author)
