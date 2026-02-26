@@ -1,0 +1,104 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "su -c 'pg_isready -U postgres' postgres"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    ports:
+      - "5433:5432"
+
+  minio:
+    image: minio/minio:latest
+    volumes:
+      - ./s3/data:/data
+    ports:
+      - ${MINIO_PORT}:9000
+      - ${MINIO_PANEL_PORT}:9001
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_USE_SSL: false
+    command: server --console-address ":9001" /data/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - backend
+
+  keycloak:
+    image: keycloak/keycloak:26.3.2
+    container_name: keycloak
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: temporary-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: password
+    ports:
+      - "8155:8080"
+    command:
+      - start-dev
+    networks:
+      - backend
+
+  rabbit-mq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RMQ_PASS}
+      RABBITMQ_DEFAULT_VHOST: /celery
+    networks:
+      - backend
+
+  backend:
+    container_name: vkr-check-backend
+    build: ./backend
+    restart: unless-stopped
+    command: uvicorn src.main:app --host=0.0.0.0 --port=8000
+    env_file:
+      - ./backend/.env.production
+    depends_on:
+      - minio
+      - postgres
+    ports:
+      - "8000:8000"
+    networks:
+      - backend
+
+  frontend:
+    container_name: vkr-check-frontend
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - backend
+
+  nginx:
+    container_name: vkr-check-nginx
+    image: nginx:stable-alpine
+    restart: on-failure
+    ports:
+      - "4200:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    depends_on:
+      - frontend
+      - backend                                               
+    networks:
+      - backend
+
+networks:
+  backend:

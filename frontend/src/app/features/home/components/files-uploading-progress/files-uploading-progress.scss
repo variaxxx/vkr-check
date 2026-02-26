@@ -1,0 +1,46 @@
+:host {
+  display: block;
+
+  .progress-bar {
+    transition: width 0.1s ease-in-out;
+  }
+
+  .progress-bar::before {
+    content: '';
+    position: absolute;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.5),
+      transparent
+    );
+    width: 50%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    animation: shimmer 1s infinite;
+  }
+
+  .progress-bar-enter {
+    animation: enter 1s ease forwards;
+  }
+}
+
+@keyframes enter {
+  0% {
+    max-height: 0;
+  }
+  100% {
+    max-height: 100px;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: skewX(-10deg) translateX(-100%);
+  }
+
+  100% {
+    transform: skewX(-10deg) translateX(200%);
+  }
+}

@@ -1,0 +1,15 @@
+<div class="w-full bg-white h-19.5 shadow-md p-4 flex justify-between items-center">
+  <div class="flex items-center gap-3 max-w-1/2">
+    <app-icon icon="user" class="text-blue-600 h-8 w-8"></app-icon>
+    @if (me$ | async; as me) {
+      <div class="min-w-0">
+        <p class="font-medium text-neutral-800 truncate">{{ me.name }}</p>
+        <p class="text-sm text-neutral-500 truncate">{{ me.email }}</p>
+      </div>
+    }
+  </div>
+  <app-button (click)="logout()" type="button" priority="secondary" size="sm">
+    <app-icon icon="log-out" class="w-4 h-4"></app-icon>
+    Выход
+  </app-button>
+</div>

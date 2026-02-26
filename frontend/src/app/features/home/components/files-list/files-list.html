@@ -1,0 +1,24 @@
+@if (files$ | async; as files) {
+  <div class="bg-white rounded-xl border-2 border-neutral-200">
+    <div class="px-6 py-4 border-b border-neutral-200">
+      <h2 class="font-medium text-lg text-neutral-900">Подтверждение загрузки ({{ files.length }})</h2>
+      <p class="text-sm text-neutral-500">Проверьте список файлов перед отправкой на обработку</p>
+    </div>
+
+    @for (file of files; track $index) {
+      <app-files-list-item [file]="file" (remove)="remove($event)"></app-files-list-item>
+    }
+
+    <div class="px-6 py-4 rounded-b-xl bg-neutral-100 flex justify-between items-center gap-3 max-md:flex-col relative overflow-hidden">
+      <p class="text-sm text-neutral-500">Готово к загрузке: <span class="font-medium text-neutral-900"> {{ files.length }} </span></p>
+
+      <div class="flex gap-3 max-md:flex-col-reverse">
+        <app-button type="button" priority="secondary" size="sm" (click)="clearAll()" [disabled]="isUploading()">Очистить все</app-button>
+        <app-button type="button" priority="primary" size="sm" (click)="submit()" [disabled]="isUploading()">
+          <app-icon icon="upload" class="h-4 w-4"></app-icon>
+          Загрузить и обработать
+        </app-button>
+      </div>
+    </div>
+  </div>
+}

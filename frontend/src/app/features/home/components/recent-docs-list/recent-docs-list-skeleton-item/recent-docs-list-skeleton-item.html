@@ -1,0 +1,31 @@
+<div
+  class="px-6 py-4 flex items-center max-md:flex-col max-md:items-start gap-"
+  >
+  <div class="flex-1 min-w-0 flex flex-col">
+    <ngx-skeleton-loader
+      [theme]="{
+        height: '20px',
+        width: '128px',
+        margin: '0',
+      }"
+      class="h-5"
+    ></ngx-skeleton-loader>
+    <ngx-skeleton-loader
+      [theme]="{
+        height: '16px',
+        width: '64px',
+        margin: '0',
+      }"
+      class="mt-1 h-4"
+    ></ngx-skeleton-loader>
+  </div>
+  <ngx-skeleton-loader
+    [theme]="{
+      height: '24px',
+      width: '100px',
+      margin: '0',
+      borderRadius: 'calc(infinity * 1px)',
+    }"
+    class="h-6"
+  ></ngx-skeleton-loader>
+</div>

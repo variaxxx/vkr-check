@@ -1,0 +1,53 @@
+:host {
+  .notification-container {
+    transform-origin: bottom;
+  }
+
+  .notification-container:before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 3px;
+    width: 100%;
+    animation: progress var(--timeout) linear forwards;
+  }
+
+  .animate-enter {
+    animation: slide-in 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .animate-leave {
+    animation: slide-out 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+@keyframes slide-in {
+  0% {
+    transform: scaleY(0.5) translateY(100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scaleY(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(100%);
+  }
+}
+
+@keyframes progress {
+  100% {
+    right: 100%;
+  }
+}

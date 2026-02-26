@@ -1,0 +1,23 @@
+<div
+  class="notification-container flex items-center gap-4 px-4 py-3 rounded-xl relative overflow-hidden bg-white transition-colors border border-neutral-200 justify-between before:bg-neutral-600"
+  animate.enter="animate-enter"
+  [style.--timeout.ms]="notification().timeoutMs"
+>
+  <div class="flex gap-3 items-center">
+    <div
+      class="w-12 p-3 flex justify-center items-center rounded-lg"
+      [ngClass]="config.classes"
+      >
+      <app-icon [icon]="config.icon" class="h-6 w-6"></app-icon>
+    </div>
+
+    <div class="flex flex-col">
+      <span class="text-lg font-medium text-neutral-900">{{ config.title }}</span>
+      <span class="text-neutral-500">{{ notification().message }}</span>
+    </div>
+  </div>
+
+  <button class="min-w-5 min-h-5 cursor-pointer" (click)="dismiss()">
+    <app-icon icon="x" class="w-5 h-5 text-neutral-600 hover:text-black"></app-icon>
+  </button>
+</div>

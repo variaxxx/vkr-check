@@ -1,0 +1,7 @@
+<div class="px-6 py-4 flex items-center max-md:flex-col max-md:items-start gap-3">
+  <div class="flex-1 min-w-0">
+    <p class="text-sm font-medium text-neutral-900 break-all md:truncate">{{ doc().original_name }}</p>
+    <p class="text-xs text-neutral-500 mt-1">{{ doc().created_at | prettyDate }}</p>
+  </div>
+  <app-document-status-plate [status]="doc().status"></app-document-status-plate>
+</div>
