@@ -12,10 +12,10 @@ router = APIRouter(prefix="/report", tags=["Report"], route_class=DishkaRoute)
 
 
 @router.get("")
-async def get_report(
+async def get_report_for_all(
     report_service: FromDishka[ReportService],
     user: FromDishka[TokenUserInfo],
     start: datetime = Query(...),
     end: datetime = Query(...),
 ) -> StreamingResponse:
-    return await report_service.get(user=user, start=start, end=end)
+    return await report_service.get_for_all(user=user, start=start, end=end)
