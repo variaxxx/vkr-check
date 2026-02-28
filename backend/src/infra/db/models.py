@@ -35,6 +35,9 @@ class Document(BaseModel):
     file_url: Mapped[str] = mapped_column(
         String(length=512), unique=True, nullable=False
     )
+    report_url: Mapped[str] = mapped_column(
+        String(length=512), unique=True, nullable=True
+    )
     status: Mapped[DocumentStatus] = mapped_column(
         Enum(DocumentStatus), default=DocumentStatus.UPLOADED
     )

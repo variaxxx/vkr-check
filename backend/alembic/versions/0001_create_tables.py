@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises:
-Create Date: 2026-02-25 17:30:01.429984
+Create Date: 2026-03-01 01:20:01.008418
 
 """
 
@@ -69,6 +69,7 @@ def upgrade() -> None:
         "documents",
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("file_url", sa.String(length=512), nullable=False),
+        sa.Column("report_url", sa.String(length=512), nullable=True),
         sa.Column(
             "status",
             sa.Enum(
@@ -107,6 +108,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("file_url"),
+        sa.UniqueConstraint("report_url"),
     )
     op.create_table(
         "document_authors",
