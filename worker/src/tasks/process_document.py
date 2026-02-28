@@ -30,7 +30,7 @@ ALLOWED_FILE_TYPES = [
     "application/pdf",
 ]
 
-PDF_REPORT_TEMPLATE = "../services/templates/pdf_template.html"
+PDF_REPORT_TEMPLATE = "src/services/templates/pdf_template.html"
 
 
 @worker.task(
@@ -201,6 +201,19 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         )
         print("[DEBUG] Report generated")
 
+        pdf_report = vkr_report.generate_pdf_report(report_dict, PDF_REPORT_TEMPLATE)
+        pdf_report_obj_name = ".".join(object_name.split(".")[:-1]) + ".pdf"
+
+        minio.client.put_object(
+            bucket_name="reports",
+            object_name=pdf_report_obj_name,
+            data=pdf_report,
+            length=pdf_report.getbuffer().nbytes,
+            content_type="application/pdf",
+        )
+
+        print("[DEBUG] PDF report generated")
+
         # Сохранение результатов
         for student in fio_list:
             parts = student.split()
@@ -216,6 +229,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
         doc.score = report_dict["summary"].get("average_score", 0)
         doc.topic = theme if isinstance(theme, str) else (theme[0] if theme else "")
+        doc.report_url = f"reports/{pdf_report_obj_name}"
 
         if doc.score < 6:
             doc.status = DocumentStatus.REJECTED
@@ -225,8 +239,6 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         doc.result = report_dict
         db.commit()
         print(f"[DEBUG] Success: {doc_id} processed")
-
-        pdf_report = vkr_report.generate_pdf_report(report_dict, PDF_REPORT_TEMPLATE)
 
     except Exception as e:
         print(f"[ERROR] Doc {doc_id} failed: {e}")

@@ -1,6 +1,7 @@
+import io
 import time
 from typing import Any, Dict, List
-import io
+
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
 
@@ -39,7 +40,7 @@ class VKRReport:
             "compliance_percentage": round(avg_score * 10, 1),
             "total_points_analyzed": len(total_scores),
         }
-    
+
     @staticmethod
     def generate_pdf_report(data: Dict[str, Any], template_path: str) -> io.BytesIO:
         """
@@ -48,7 +49,7 @@ class VKRReport:
         env = Environment(loader=FileSystemLoader("."))
 
         template = env.get_template(template_path)
-        
+
         html_content = template.render(data=data)
 
         pdf_document = HTML(string=html_content, base_url=".")
@@ -63,7 +64,7 @@ class VKRReport:
         info: dict,
         task_evaluations: List[Dict[str, Any]],
         signs_verification: dict,
-        evaluations: List[Dict[str, Any]]
+        evaluations: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Генерирует финальную структуру отчета"""
 
