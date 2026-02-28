@@ -30,6 +30,8 @@ ALLOWED_FILE_TYPES = [
     "application/pdf",
 ]
 
+PDF_REPORT_TEMPLATE = "../services/templates/pdf_template.html"
+
 
 @worker.task(
     name="ml.process_document",
@@ -223,6 +225,8 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         doc.result = report_dict
         db.commit()
         print(f"[DEBUG] Success: {doc_id} processed")
+
+        pdf_report = vkr_report.generate_pdf_report(report_dict, PDF_REPORT_TEMPLATE)
 
     except Exception as e:
         print(f"[ERROR] Doc {doc_id} failed: {e}")
