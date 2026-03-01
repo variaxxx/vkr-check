@@ -84,6 +84,19 @@ services:
     networks:
       - backend
 
+  worker:
+    container_name: vkr-check-worker
+    build: ./worker
+    restart: unless-stopped
+    env_file:
+      - ./worker/.env.production
+    depends_on:
+      - minio
+      - postgres
+      - rabbitmq
+    networks:
+      - backend
+
   frontend:
     container_name: vkr-check-frontend
     build: ./frontend
