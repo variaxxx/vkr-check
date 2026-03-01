@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 
 from src.common.enums import DocumentStatus
 from src.common.schemas import FindManyResponse, TokenUserInfo
+from src.modules.report.service import ReportService
 
 from .schemas import (
     DocumentResponse,
@@ -76,3 +77,12 @@ async def download_document(
     user: FromDishka[TokenUserInfo],
 ) -> StreamingResponse:
     return await document_service.download(document_id=document_id, user=user)
+
+
+@router.get("/{document_id}/report")
+async def download_report(
+    document_id: uuid.UUID,
+    report_service: FromDishka[ReportService],
+    user: FromDishka[TokenUserInfo],
+) -> StreamingResponse:
+    return await report_service.get_for_doc(doc_id=document_id, user=user)

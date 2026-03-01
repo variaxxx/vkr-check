@@ -6,7 +6,7 @@ class MinioService:
     def __init__(self, config: Settings):
         self.config = config
         self.client = None
-        self.document_bucket = "documents"
+        self.required_buckets = ["documents", "reports"]
 
         self._init_client()
         self._ensure_bucket_exists()
@@ -20,5 +20,6 @@ class MinioService:
         )
 
     def _ensure_bucket_exists(self) -> None:
-        if not self.client.bucket_exists(self.document_bucket):
-            self.client.make_bucket(self.document_bucket)
+        for bucket in self.required_buckets:
+            if not self.client.bucket_exists(bucket):
+                self.client.make_bucket(bucket)

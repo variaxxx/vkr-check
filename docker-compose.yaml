@@ -9,6 +9,8 @@ services:
       - POSTGRES_PASSWORD=postgres
     networks:
       - backend
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "su -c 'pg_isready -U postgres' postgres"]
       interval: 30s
@@ -43,6 +45,8 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: temporary-admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: password
+    volumes:
+      - keycloak_data:/opt/keycloak/data
     ports:
       - "8155:8080"
     command:
@@ -50,7 +54,7 @@ services:
     networks:
       - backend
 
-  rabbit-mq:
+  rabbitmq:
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
@@ -59,6 +63,8 @@ services:
       RABBITMQ_DEFAULT_USER: ${RMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RMQ_PASS}
       RABBITMQ_DEFAULT_VHOST: /celery
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - backend
 
@@ -72,8 +78,22 @@ services:
     depends_on:
       - minio
       - postgres
+      - rabbitmq
     ports:
       - "8000:8000"
+    networks:
+      - backend
+
+  worker:
+    container_name: vkr-check-worker
+    build: ./worker
+    restart: unless-stopped
+    env_file:
+      - ./worker/.env.production
+    depends_on:
+      - minio
+      - postgres
+      - rabbitmq
     networks:
       - backend
 
@@ -102,3 +122,8 @@ services:
 
 networks:
   backend:
+
+volumes:
+  postgres_data:
+  keycloak_data:
+  rabbitmq_data:

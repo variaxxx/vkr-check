@@ -20,6 +20,7 @@ dependencies = [
     "psycopg2-binary (>=2.9.11,<3.0.0)",
     "pymupdf4llm (>=0.2.9,<0.3.0)",
     "faiss-cpu (>=1.13.2,<2.0.0)",
+    "weasyprint (>=68.1,<69.0)",
 ]
 
 [dependency-groups]

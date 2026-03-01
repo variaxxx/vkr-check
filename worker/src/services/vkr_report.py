@@ -1,5 +1,9 @@
+import io
 import time
 from typing import Any, Dict, List
+
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML
 
 
 class VKRReport:
@@ -37,13 +41,30 @@ class VKRReport:
             "total_points_analyzed": len(total_scores),
         }
 
+    @staticmethod
+    def generate_pdf_report(data: Dict[str, Any], template_path: str) -> io.BytesIO:
+        """
+        Генерация PDF отчета по HTML шаблону
+        """
+        env = Environment(loader=FileSystemLoader("."))
+
+        template = env.get_template(template_path)
+
+        html_content = template.render(data=data)
+
+        pdf_document = HTML(string=html_content, base_url=".")
+
+        pdf_bytes = pdf_document.write_pdf()
+
+        return io.BytesIO(pdf_bytes)
+
     @classmethod
     def generate_report(
         cls,
         info: dict,
         task_evaluations: List[Dict[str, Any]],
         signs_verification: dict,
-        evaluations: List[Dict[str, Any]]
+        evaluations: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Генерирует финальную структуру отчета"""
 
