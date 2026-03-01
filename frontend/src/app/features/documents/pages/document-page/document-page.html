@@ -29,10 +29,12 @@
             Скачать работу
           </app-button>
 
-          <app-button size="sm" priority="secondary" (click)="downloadRep($event)">
-            <app-icon icon="document" class="w-5 h-5"></app-icon>
-            Скачать отчёт
-          </app-button>
+          @if (["approved", "rejected"].includes(doc.status)) {
+            <app-button size="sm" priority="secondary" (click)="downloadRep($event)">
+              <app-icon icon="document" class="w-5 h-5"></app-icon>
+              Скачать отчёт
+            </app-button>
+          }
         </div>
       </div>
 
