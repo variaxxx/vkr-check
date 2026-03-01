@@ -2,8 +2,6 @@ import re
 from typing import Tuple
 
 from langchain_community.vectorstores import FAISS
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
 
 from .llm_service import LLMService
 from .rag import RAGEngine
@@ -11,12 +9,11 @@ from .rag import RAGEngine
 
 class VKRAnalyzer:
     def __init__(self, llm_service: LLMService, rag_engine: RAGEngine):
-        # тут есть проблема: модель иногда циклится и я не знаю как это фиксить
         self.llm_service = llm_service
         self.rag_engine = rag_engine
 
-    def evaluate_point(self, task_point: str, vector_db: FAISS) -> Tuple[int, str]:
-        """Оценивает пункт задания, понимая, где в дипломе искать информацию"""
+    async def evaluate_point(self, task_point: str, vector_db: FAISS) -> Tuple[int, str]:
+        """Асинхронно оценивает пункт задания на основе извлеченного контекста"""
 
         target_categories = None
         if any(word in task_point.lower() for word in ["литератур", "источник", "библиогр"]):
@@ -31,33 +28,43 @@ class VKRAnalyzer:
         )
         context = self.rag_engine.get_context_from_docs(docs)
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", "Ты эксперт, проверяющий соответствие ВКР (дипломную работу) выданному заданию. Оцени, раскрыт ли пункт в тексте. Отвечай максимально кратко и строго по шаблону. Не пиши вступлений."),
-            ("user", """
+        system_prompt = """Ты эксперт, проверяющий соответствие ВКР (дипломную работу) выданному заданию.
+Оцени, раскрыт ли пункт в тексте (0 - пункт вообще не упоминается в тексте, 10 - пункт полностью раскрыт в тексте). 
+Отвечай строго по шаблону.
+Не пиши вступлений."""
+
+        user_text = """
 Пункт задания: {task_point}
 Контекст: {context}
 
 Шаблон:
 Балл: [число от 0 до 10]
 Обоснование: [1-2 предложения]
-""")
-        ])
+"""
 
-        llm = self.llm_service.get_llm()
-        chain = prompt | llm.bind(max_tokens=512, temperature=0) | StrOutputParser()
+        prompt_template = self.llm_service.create_text_prompt(
+            user_text=user_text,
+            system_prompt=system_prompt
+        )
 
-        try:
-            result = chain.invoke(
-                {"task_point": task_point, "context": context},
-            )
-        except Exception as e:
-            return 0, f"Ошибка тайм-аута или генерации: {e}"
+        result = await self.llm_service.llm_text_request(
+            prompt=prompt_template,
+            template_dict={"task_point": task_point, "context": context},
+            max_tokens=512,
+            temperature=0
+        )
+        print(result)
+        if not result:
+            return 0, "Ошибка генерации: пустой ответ от модели"
 
         return self._parse_evaluation_result(result)
 
     def _parse_evaluation_result(self, result_text: str) -> Tuple[int, str]:
         score_match = re.search(r"Балл:\s*(\d+)", result_text)
+        if not score_match:
+            score_match = re.search(r"(?:Балл:\s*)?^(\d+)", result_text, re.MULTILINE)
         reason_match = re.search(r"Обоснование:\s*(.*)", result_text, re.DOTALL)
+
         score = int(score_match.group(1)) if score_match else 0
         reason = reason_match.group(1).strip() if reason_match else result_text
         return score, reason

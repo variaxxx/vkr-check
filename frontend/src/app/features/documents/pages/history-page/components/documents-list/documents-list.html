@@ -21,7 +21,7 @@
         @for (doc of documents() ?? [null, null, null, null, null, null, null, null, null, null]; track $index) {
           <tr
             class="cursor-pointer hover:bg-neutral-100 transition-colors"
-            [routerLink]="doc ? ['docs', doc.id] : []"
+            [routerLink]="doc ? ['..', 'documents', doc.id] : []"
           >
             <td
               class="px-6 py-4 whitespace-nowrap"
@@ -66,13 +66,14 @@
             </td>
 
             <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700 max-w-3xs"
+              class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700 max-w-sm"
             >
               @if (doc) {
                 @if (doc.authors) {
                   @for (a of doc.authors; track $index) {
-                    <div class="mb-1">
-                      {{ a }}
+                    <div class="mb-1 truncate">
+                      <span>{{ a.fio }}</span>
+                      <span class="ml-2 text-neutral-400 font-medium">{{ a.group ?? "Группа не распознана" }}</span>
                     </div>
                   }
                 } @else { — }
@@ -85,7 +86,7 @@
             </td>
 
             <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700"
+              class="px-6 py-4 text-sm text-neutral-700 max-w-sm"
             >
               @if (doc) {
                 {{ doc.topic ?? '—' }}

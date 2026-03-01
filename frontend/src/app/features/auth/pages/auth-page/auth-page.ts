@@ -1,7 +1,8 @@
+import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
+
 import { AuthService } from "../../../../core/services";
 import { Button } from "../../../../shared/components/button/button";
 import { Icon } from "../../../../shared/components/icon/icon";
-import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
 
 @Component({
   selector: "app-auth-page",

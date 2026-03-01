@@ -9,15 +9,12 @@ export default antfu({
       "style/brace-style": ["error", "1tbs"],
       "perfectionist/sort-imports": ["warn", {
         type: "alphabetical",
-        groups: [{
-          newlinesBetween: 0,
-        }],
       }],
-      "no-console": "warn",
+      "no-console": "off",
       "antfu/no-top-level-await": "off",
       "antfu/top-level-function": "warn",
       "node/prefer-global/process": "off",
-      "unused-imports/no-unused-vars": "off",
+      "unused-imports/no-unused-vars": "warn",
       "ts/consistent-type-imports": "off",
       "unused-imports/no-unused-imports": "error",
       "ts/explicit-function-return-type": "warn",

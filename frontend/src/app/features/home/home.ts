@@ -1,11 +1,12 @@
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { FormControl, FormGroup, ReactiveFormsModule } from "@angular/forms";
+
 import { DocumentService, NotificationService } from "../../core/services";
 import { FilesInput } from "./components/files-input/files-input";
 import { FilesList } from "./components/files-list/files-list";
 import { FilesUploadingProgress } from "./components/files-uploading-progress/files-uploading-progress";
 import { RecentDocsList } from "./components/recent-docs-list/recent-docs-list";
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { FormControl, FormGroup, ReactiveFormsModule } from "@angular/forms";
 
 @Component({
   selector: "app-home",

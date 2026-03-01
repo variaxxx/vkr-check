@@ -1,9 +1,10 @@
-import { env } from "../../../environments/environment";
-import { AccessTokenResponse, UserInfoResponse } from "../../features/auth/dto";
-import { randomString } from "../../shared/utils";
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { BehaviorSubject, catchError, map, Observable, of, tap } from "rxjs";
+
+import { env } from "../../../environments/environment";
+import { AccessTokenResponse, UserInfoResponse } from "../../features/auth/dto";
+import { randomString } from "../../shared/utils";
 
 @Injectable({
   providedIn: "root",

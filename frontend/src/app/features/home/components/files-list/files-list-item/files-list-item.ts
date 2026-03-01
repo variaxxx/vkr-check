@@ -1,6 +1,7 @@
+import { ChangeDetectionStrategy, Component, input, output } from "@angular/core";
+
 import { Icon } from "../../../../../shared/components/icon/icon";
 import { FileSizePipe } from "../../../../../shared/pipes";
-import { ChangeDetectionStrategy, Component, input, output } from "@angular/core";
 
 @Component({
   selector: "app-files-list-item",

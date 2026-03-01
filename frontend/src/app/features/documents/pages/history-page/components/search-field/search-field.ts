@@ -1,6 +1,6 @@
-import { Icon } from "../../../../shared/components/icon/icon";
 import { ChangeDetectionStrategy, Component, forwardRef, signal } from "@angular/core";
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
+import { Icon } from "@shared/components/icon/icon";
 
 @Component({
   selector: "app-search-field",

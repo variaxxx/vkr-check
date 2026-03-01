@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises:
-Create Date: 2026-01-26 18:35:26.203563
+Create Date: 2026-02-25 17:30:01.429984
 
 """
 
@@ -29,6 +29,7 @@ def upgrade() -> None:
         sa.Column("last_name", sa.String(length=256), nullable=False),
         sa.Column("first_name", sa.String(length=256), nullable=False),
         sa.Column("middle_name", sa.String(length=256), nullable=True),
+        sa.Column("group", sa.String(length=16), nullable=True),
         # sa.Column("search_vector", postgresql.TSVECTOR(), nullable=False),
         sa.Column(
             "created_at",
@@ -73,8 +74,9 @@ def upgrade() -> None:
             sa.Enum(
                 "UPLOADED",
                 "IN_PROCESSING",
-                "SUCCESS",
                 "FAILED",
+                "APPROVED",
+                "REJECTED",
                 name="documentstatus",
             ),
             nullable=False,

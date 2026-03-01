@@ -21,7 +21,13 @@ class UserService:
             user_id=user_id, email=email, name=name
         )
 
-    async def get_by_id(self, id: Union[UUID, str]) -> UserInfoResponse:
+    async def get_by_id(
+        self, id: Union[UUID, str]
+    ) -> Union[UserInfoResponse, None]:
         id = normalize_uuid(id)
         user = await self.repo.get_by_id(id=id)
-        return UserInfoResponse(id=user.id, email=user.email, name=user.name)
+        return (
+            UserInfoResponse(id=user.id, email=user.email, name=user.name)
+            if user
+            else user
+        )

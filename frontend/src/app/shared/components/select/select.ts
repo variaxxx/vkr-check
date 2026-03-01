@@ -1,6 +1,7 @@
-import { Icon } from "../icon/icon";
 import { ChangeDetectionStrategy, Component, forwardRef, input, signal } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
+
+import { Icon } from "../icon/icon";
 
 export interface SelectOption {
   label: string;

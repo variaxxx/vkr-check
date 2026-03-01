@@ -35,7 +35,7 @@ class Document(BaseModel):
     file_url: Mapped[str] = mapped_column(
         String(length=512), unique=True, nullable=False
     )
-    status: Mapped[str] = mapped_column(
+    status: Mapped[DocumentStatus] = mapped_column(
         Enum(DocumentStatus), default=DocumentStatus.UPLOADED
     )
     original_name: Mapped[str] = mapped_column(
@@ -66,6 +66,7 @@ class Author(BaseModel):
     last_name: Mapped[str] = mapped_column(String(256))
     first_name: Mapped[str] = mapped_column(String(256))
     middle_name: Mapped[str] = mapped_column(String(256), nullable=True)
+    group: Mapped[str] = mapped_column(String(16), nullable=True)
     search_vector: Mapped[str] = mapped_column(TSVECTOR)
 
     documents: Mapped[List["Document"]] = relationship(

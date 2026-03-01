@@ -1,9 +1,10 @@
-import { NotificationService } from "../../../../core/services";
-import { Button } from "../../../../shared/components/button/button";
-import { Icon } from "../../../../shared/components/icon/icon";
 import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, ElementRef, forwardRef, inject, input, signal, ViewChild } from "@angular/core";
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
+
+import { NotificationService } from "../../../../core/services";
+import { Button } from "../../../../shared/components/button/button";
+import { Icon } from "../../../../shared/components/icon/icon";
 
 @Component({
   selector: "app-files-input",

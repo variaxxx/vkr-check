@@ -1,66 +1,65 @@
 import re
-from typing import Tuple, Dict, List
-
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+from typing import Dict, List, Tuple
 
 from src.services.llm_service import LLMService
 
 
 class ApplicationChecker:
     def __init__(self, llm_service: LLMService):
-        self.llm = llm_service.get_llm()
+        self.llm_service = llm_service
 
-    def evaluate(self,  chunks: List[Dict]) -> Tuple[int, str, Dict]:
+    async def evaluate(self, chunks: List[Dict]) -> Tuple[int, str, Dict]:
         """
-        Проверяет правильность приложения
+        Проверяет правильность приложения (асинхронно)
         """
 
+        context_list = [i["title"] + "\n" + i["text"] for i in chunks if i.get("category") == "application"]
+        context_text = "\n".join(context_list)
 
-        ## тут из классифицированных чанков.
-        context: List = [i["text"] for i in chunks if i.get("category") == "application"]
+        system_prompt = """
+Ты — строгий эксперт по проверке ВКР.
+Проверяй приложение ТОЛЬКО по методическим указаниям.
+Каждое слово требований важно.
+Обязательно указывай расхождения.
+Отвечай строго по шаблону.
+"""
 
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """Проверь приложение на
-соответствие следующим требованиям:\
-В приложение не включается список использованной литературы,
-справочные комментарии и примечания, которые являются не приложениями
-к основному тексту, а элементами справочно-сопроводительного аппарата работы,
-помогающими пользоваться ее основным текстом.
-Приложения оформляются как продолжение выпускной квалификационной работы на ее
-последних страницах.
+        user_content = """Текст приложений:
+{context_text}
+
+Методические требования к оформлению приложений:
+1. Указано слово «Приложение» и тематический заголовок.
+2. В приложении должны отсутствовать список литературы, комментарии и примечания.
+3. Содержание соответствует справочному характеру (например: копии документов, таблицы, графики, акты, программный код).
 
 Важно: 
-1. если приложения нет, то выводи только следующий текст и ничего больше: Статус: 10, Отчет: Нет приложения, Нарушения: Нет приложения.
+1. если приложения нет, то выводи только следующий текст и ничего больше: Балл: 10, Отчет: Нет приложения, Нарушения: Нет приложения.
 2. Пиши ответ в формате текста, нельзя писать в формате markdown
 
 Шаблон ответа:
-Статус: [0-10], где 0 - приложение полностью не соответствует требованиям,
-10 - приложение соответствует требованиям
+
+Балл: [0-10], (0 - приложение полностью не соответствует требованиям, 10 - приложение полностью соответствует требованиям)
 Нарушения:
 - ...
 - ...
 Обоснование: [2–3 предложения]
-""",
-                ),
-                ("user", "".join(context)),
-            ]
+"""
+
+        prompt_template = self.llm_service.create_text_prompt(
+            user_text=user_content,
+            system_prompt=system_prompt
         )
 
-        chain = (
-            prompt
-            | self.llm.bind(max_tokens=1024, temperature=0)
-            | StrOutputParser()
+        result = await self.llm_service.llm_text_request(
+            prompt=prompt_template,
+            template_dict={"context_text": context_text},
+            max_tokens=1024,
+            temperature=0.1
         )
-
-        result = chain.invoke({"context": context})
 
         return self._parse_result(result)
 
     def _parse_result(self, result: str) -> Tuple[int, str, Dict]:
-        score_match = re.search(r"Статус: (\d+)", result)
+        score_match = re.search(r"Балл: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {}

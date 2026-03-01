@@ -1,7 +1,8 @@
-import { IconName } from "../../../app.icons";
-import { IconService } from "./icon.service";
 import { booleanAttribute, ChangeDetectionStrategy, Component, inject, input } from "@angular/core";
 import { SafeHtml } from "@angular/platform-browser";
+
+import { IconName } from "../../../app.icons";
+import { IconService } from "./icon.service";
 
 @Component({
   selector: "app-icon",

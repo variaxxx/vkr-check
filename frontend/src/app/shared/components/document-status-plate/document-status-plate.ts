@@ -1,8 +1,9 @@
+import { NgClass } from "@angular/common";
+import { ChangeDetectionStrategy, Component, input } from "@angular/core";
+
 import { IconName } from "../../../app.icons";
 import { DOCUMENT_STATUS, DocumentStatus } from "../../enums";
 import { Icon } from "../icon/icon";
-import { NgClass } from "@angular/common";
-import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
 interface StatusConfig {
   icon: IconName;
@@ -26,10 +27,15 @@ const STATUS_CONFIG: Record<DocumentStatus, StatusConfig> = {
     label: "Ошибка",
     classes: "text-red-600 bg-red-100",
   },
-  [DOCUMENT_STATUS.SUCCESS]: {
+  [DOCUMENT_STATUS.APPROVED]: {
     icon: "check-circle",
-    label: "Успешно",
+    label: "Зачёт",
     classes: "text-green-600 bg-green-100",
+  },
+  [DOCUMENT_STATUS.REJECTED]: {
+    icon: "x-circle",
+    label: "Незачёт",
+    classes: "text-red-600 bg-red-100",
   },
 };
 

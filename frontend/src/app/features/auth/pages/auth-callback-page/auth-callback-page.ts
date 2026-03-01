@@ -1,8 +1,9 @@
-import { AuthService } from "../../../../core/services";
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
 import { map, switchMap } from "rxjs";
+
+import { AuthService } from "../../../../core/services";
 
 @Component({
   selector: "app-auth-callback-page",

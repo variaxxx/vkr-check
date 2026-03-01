@@ -5,7 +5,12 @@
   "compilerOptions": {
     "target": "ES2022",
     "experimentalDecorators": true,
+    "baseUrl": "./",
     "module": "preserve",
+    "paths": {
+      "@shared/*": ["src/app/shared/*"],
+      "@core/*": ["src/app/core/*"]
+    },
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,

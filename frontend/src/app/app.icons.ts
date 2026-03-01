@@ -20,6 +20,8 @@ export const iconsConfig = {
     "refresh",
     "chevron-left",
     "chevron-right",
+    "check",
+    "x-circle",
   ] as const,
 };
 

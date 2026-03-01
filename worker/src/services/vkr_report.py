@@ -6,7 +6,7 @@ class VKRReport:
     """Генератор отчетов в формате JSON для ВКР"""
 
     @staticmethod
-    def _calculate_summary(task_evaluations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_summary(task_evaluations: List[Dict[str, Any]], evaluations: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Интеркапсулированная логика формирования оценки.
         Вычисляет средний балл и процент соответствия на основе анализа пунктов задания.
@@ -20,7 +20,16 @@ class VKRReport:
                 "total_points_analyzed": 0,
             }
 
-        avg_score = sum(total_scores) / len(total_scores)
+        avg_task_score = sum(total_scores) / len(total_scores)
+
+        application_ev = [e for e in evaluations if e.get("section") == "application"][0]
+
+        total_ev_scores = [e.get("score", 0) for e in evaluations if e.get("section") != "application"]
+
+        if application_ev.get("found") == 1:
+            avg_score = (avg_task_score + sum(total_ev_scores) + application_ev.get("score")) / (len(evaluations) + 1)
+        else:
+            avg_score = (avg_task_score + sum(total_ev_scores)) / len(evaluations)
 
         return {
             "average_score": round(avg_score, 2),
@@ -38,7 +47,7 @@ class VKRReport:
     ) -> Dict[str, Any]:
         """Генерирует финальную структуру отчета"""
 
-        summary = cls._calculate_summary(task_evaluations)
+        summary = cls._calculate_summary(task_evaluations, evaluations)
 
         report_data = {
             "info": info,

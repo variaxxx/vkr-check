@@ -1,25 +1,26 @@
-import { DocumentService } from "../../core/services";
-import { Button } from "../../shared/components/button/button";
-import { Icon } from "../../shared/components/icon/icon";
-import { Select, SelectOption } from "../../shared/components/select/select";
-import { DOCUMENT_STATUS, DocumentStatus } from "../../shared/enums";
-import { DocumentShortResponse } from "../documents/dto";
-import { DocumentsList } from "./components/documents-list/documents-list";
-import { SearchField } from "./components/search-field/search-field";
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from "@angular/core";
 import { takeUntilDestroyed, toObservable } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, ReactiveFormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
+import { DocumentService } from "@core/services";
+import { Button } from "@shared/components/button/button";
+import { Icon } from "@shared/components/icon/icon";
+import { Select, SelectOption } from "@shared/components/select/select";
+import { DOCUMENT_STATUS, DocumentStatus } from "@shared/enums";
 import { combineLatest, debounceTime, distinctUntilChanged, startWith, Subject, switchMap, tap } from "rxjs";
 
+import { DocumentShortResponse } from "../../dto";
+import { DocumentsList } from "./components/documents-list/documents-list";
+import { SearchField } from "./components/search-field/search-field";
+
 @Component({
-  selector: "app-history",
+  selector: "app-history-page",
   imports: [SearchField, Select, ReactiveFormsModule, DocumentsList, Button, Icon],
-  templateUrl: "./history.html",
-  styleUrl: "./history.scss",
+  templateUrl: "./history-page.html",
+  styleUrl: "./history-page.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class History implements OnInit {
+export class HistoryPage implements OnInit {
   private readonly docService = inject(DocumentService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
@@ -29,8 +30,9 @@ export class History implements OnInit {
     { label: "Все статусы", value: "" },
     { label: "Загружен", value: DOCUMENT_STATUS.UPLOADED },
     { label: "В обработке", value: DOCUMENT_STATUS.IN_PROCESSING },
-    { label: "Успешно", value: DOCUMENT_STATUS.SUCCESS },
     { label: "Ошибка", value: DOCUMENT_STATUS.FAILED },
+    { label: "Зачёт", value: DOCUMENT_STATUS.APPROVED },
+    { label: "Незачёт", value: DOCUMENT_STATUS.REJECTED },
   ];
 
   public form = new FormGroup({
@@ -67,7 +69,7 @@ export class History implements OnInit {
     combineLatest([
       this.form.valueChanges.pipe(
         startWith(this.form.value),
-        debounceTime(500),
+        debounceTime(300),
         distinctUntilChanged(
           (a, b) => JSON.stringify(a) === JSON.stringify(b),
         ),
@@ -96,7 +98,7 @@ export class History implements OnInit {
           });
         }),
 
-        switchMap(([filters, page]) => this.docService.getMany({
+        switchMap(([filters, page]) => this.docService.findMany({
           limit: this.pageSize,
           offset: this.pageSize * (page - 1),
           status: filters.status || undefined,

@@ -1,7 +1,6 @@
 import re
 from typing import Dict, List, Tuple
 
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from src.services.llm_service import LLMService
@@ -9,68 +8,68 @@ from src.services.llm_service import LLMService
 
 class LiteratureChecker:
     def __init__(self, llm_service: LLMService):
-        self.llm = llm_service.get_llm()
+        self.llm_service = llm_service
 
     def _check_links(self, classified_chunks: List[Dict]) -> bool:
         """Топорная логика на наличие ссылок в списке литературы"""
         counter: int = 0
-        for _, chunk in enumerate(classified_chunks):
+        for chunk in classified_chunks:
             text = chunk.get("text", "")
             refs = re.findall(r"\[(\d+)\]", text)
             counter += len(refs)
         return counter > 0
 
-    def evaluate(
-        self, chunks: List[Dict]
-    ) -> Tuple[int, str, Dict[str, bool]]:
+    async def evaluate(self, chunks: List[Dict]) -> Tuple[int, str, Dict[str, bool]]:
         """
-        Проверяет правильность списка литературы
+        Проверяет правильность списка литературы (Асинхронно)
         """
 
-        context: List = [i["text"] for i in chunks if i.get("category") == "biblio"]
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """Проверь список литературы,
-соотвествующий следующим требованиям:
-1.	Проверка порядка источников\
-2.	Проверка формата библиографических записей
+        context_text = "\n".join([i["text"] for i in chunks if i.get("category") == "biblio"])
 
-    - книги
-    - статьи
-    - конференции
-    - интернет-источники
+        system_msg = """
+Ты — строгий эксперт-нормоконтролер ВКР. Твоя задача: проверить список литературы на соответствие жестким правилам оформления.
+Проверяй текст ТОЛЬКО по приведенным методическим указаниям. Каждая точка, пробел и сокращение имеют значение.
+Если из-за обрезки текста элемент (например, дата обращения или номер страницы) отсутствует — фиксируй это как потенциальное нарушение или неполноту данных.
+Отвечай строго по шаблону. Пиши только текст, без маркауна и специальных символов.
+"""
+        user_template = """Текст списка литературы:
+{context}
 
-3.	Проверка наличия URL и даты обращения для онлайн-источников
+Методические требования к оформлению литературы:
+1. Нумерация: Арабские цифры БЕЗ точки в конце (например, 1 ). Абзацный отступ.
+2. Пунктуация и инициалы: Между инициалами пробелы ЗАПРЕЩЕНЫ (правильно: Иванов И.И.). Кавычки в названиях книг и издательств ЗАПРЕЩЕНЫ.
+3. Город и Издательство: М. и СПб. пишутся сокращенно, остальные города — полностью. После города ставится двоеточие. Слово «год» или «г.» после цифр НЕ ставится.
+4. Разделители и структура:
+   - Для статей: Автор. Название // Журнал. Год. №. С. 00-00. (Обязательны две косые черты).
+   - Для книг (под ред.): Название / Под ред. Фамилия И.О.
+   - Для конференций: Название доклада // Название мероприятия: Тема.
+5. Интернет-ресурсы: Наличие URL: [ссылка] и даты обращения в формате (дата обращения: дд.мм.гггг) в скобках.
 
 Шаблон ответа:
-Статус: [0-10], где 0 - список литературы полностью не соответствует требованиям, 1 - список литературы соответствует требованиям
+Балл: [0–10] (0 - список литературы полностью не соответствует требованиям, 10 — идеальное соответствие)
 Нарушения:
+- [наиболее частые нарушения пунктов ]
 - ...
-- ...
-Обоснование: [2–3 предложения]
-""",
-                ),
-                ("user", "".join(context)),
-            ]
-        )
+Обоснование: [2–3 предложения по общей картине качества оформления и критичности ошибок].
+"""
 
-        chain = (
-            prompt
-            | self.llm.bind(max_tokens=600, temperature=0)
-            | StrOutputParser()
-        )
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_msg),
+            ("user", user_template)
+        ])
 
-        result = chain.invoke({"context": context})
+        result = await self.llm_service.llm_text_request(
+            prompt=prompt,
+            template_dict={"context": context_text},
+            temperature=0.1,
+            max_tokens=2048
+        )
 
         links_status = bool(self._check_links(chunks))
 
         return self._parse_result(result, links_status)
 
-    def _parse_result(
-        self, result: str, links_status: bool
-    ) -> Tuple[int, str, Dict[str, bool]]:
-        score_match = re.search(r"Статус: (\d+)", result)
+    def _parse_result(self, result: str, links_status: bool) -> Tuple[int, str, Dict[str, bool]]:
+        score_match = re.search(r"Балл: (\d+)", result)
         score = int(score_match.group(1)) if score_match else 0
         return score, result, {"if_links_exists": links_status}

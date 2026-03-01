@@ -12,6 +12,7 @@ from src.services.pages_markup import MarkupPages
 from src.services.rag import RAGEngine
 from src.services.task_parser import TaskParser
 from src.services.vkr_analyzer import VKRAnalyzer
+from src.services.vkr_annotation_checker import VKRAnnotationChecker
 from src.services.vkr_application_check import ApplicationChecker
 from src.services.vkr_conclusion_checker import VKRConclusionChecker
 from src.services.vkr_intro_checker import VKRIntroductionChecker
@@ -43,3 +44,4 @@ class ServicesProvider(Provider):
     sign_detection = provide(MarkupPages, scope=Scope.APP)
     application_checker = provide(ApplicationChecker, scope=Scope.APP)
     literature_checker = provide(LiteratureChecker, scope=Scope.APP)
+    annotation_checker = provide(VKRAnnotationChecker, scope=Scope.APP)

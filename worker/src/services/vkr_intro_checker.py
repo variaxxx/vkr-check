@@ -1,9 +1,7 @@
 import re
-from typing import Tuple
+from typing import Dict, Tuple
 
 from langchain_community.vectorstores import FAISS
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
 
 from .llm_service import LLMService
 from .rag import RAGEngine
@@ -11,12 +9,12 @@ from .rag import RAGEngine
 
 class VKRIntroductionChecker:
     def __init__(self, llm_service: LLMService, rag_engine: RAGEngine):
-        self.llm = llm_service.get_llm()
+        self.llm_service = llm_service
         self.rag_engine = rag_engine
 
-    def evaluate(self, vector_db: FAISS, total_doc_volume: int) -> Tuple[int, str]:
+    async def evaluate(self, vector_db: FAISS, total_doc_volume: int) -> Tuple[int, str]:
         """
-        Проверяет введение на соответствие методическим указаниям
+        Проверяет введение на соответствие методическим указаниям (асинхронно)
         """
 
         docs = self.rag_engine.retrieve_relevant_chunks(
@@ -28,18 +26,17 @@ class VKRIntroductionChecker:
 
         context = self.rag_engine.get_context_from_docs(docs)
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """
+        system_prompt = """
 Ты — строгий эксперт по проверке ВКР.
 Проверяй введение ТОЛЬКО по методическим указаниям.
 Каждое слово требований важно.
 Если элемент отсутствует или выражен неявно - считай, что он НЕ выполнен.
 Обязательно указывай расхождения.
 Отвечай строго по шаблону.
-"""),
-            ("user", f"""
+"""
+        user_text = """
 Текст введения:
-{{context}}
+{context}
 
 Методические требования к введению:
 1. Содержит цели работы
@@ -58,15 +55,23 @@ class VKRIntroductionChecker:
 - ...
 - ...
 Обоснование: [2–3 предложения]
-""")
-        ])
+"""
 
-        chain = prompt | self.llm.bind(max_tokens=600, temperature=0) | StrOutputParser()
+        prompt = self.llm_service.create_text_prompt(
+            user_text=user_text,
+            system_prompt=system_prompt
+        )
 
-        result = chain.invoke({"context": context})
+        result = await self.llm_service.llm_text_request(
+            prompt=prompt,
+            template_dict={"context": context, "total_doc_volume": total_doc_volume},
+            max_tokens=1024,
+            temperature=0.1
+        )
+
         return self._parse_result(result)
 
-    def _parse_result(self, text: str) -> Tuple[int, str]:
+    def _parse_result(self, text: str) -> Tuple[int, str, Dict]:
         score_match = re.search(r"Балл:\s*(\d+)", text)
         score = int(score_match.group(1)) if score_match else 0
         return score, text, {}

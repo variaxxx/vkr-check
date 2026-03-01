@@ -1,7 +1,8 @@
+import { ChangeDetectionStrategy, Component, input } from "@angular/core";
+
 import { DocumentStatusPlate } from "../../../../../shared/components/document-status-plate/document-status-plate";
 import { PrettyDatePipe } from "../../../../../shared/pipes";
 import { DocumentShortResponse } from "../../../../documents/dto";
-import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
 @Component({
   selector: "app-recent-docs-list-item",

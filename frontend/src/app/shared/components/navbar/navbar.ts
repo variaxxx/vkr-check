@@ -1,7 +1,8 @@
-import { IconName } from "../../../app.icons";
-import { Icon } from "../icon/icon";
 import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { RouterLink, RouterLinkActive } from "@angular/router";
+
+import { IconName } from "../../../app.icons";
+import { Icon } from "../icon/icon";
 
 export interface AppRoute {
   route: string;
@@ -24,9 +25,14 @@ export class Navbar {
       icon: "upload",
     },
     {
-      route: "history/",
+      route: "documents/",
       label: "История",
       icon: "history",
+    },
+    {
+      route: "reports/",
+      label: "Отчёты",
+      icon: "document",
     },
   ];
 }
