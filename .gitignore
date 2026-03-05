@@ -1,8 +1,9 @@
 s3/
 .vscode/
 .env
-.python-version
+*.python-version*
 .DS_Store
 node_modules/
 test
 readme_mac.md
+

@@ -2,7 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
+    # Для локального запуска используем `.env`, а при его отсутствии берем `.env.production`.
+    model_config = SettingsConfigDict(env_file=(".env", ".env.production"))
 
     # connection params
     API_IP: str
@@ -13,6 +14,13 @@ class Settings(BaseSettings):
     MAX_TOKENS: int = 8192
     MODEL_NAME: str = "google/gemma-3n-E4B-it"
     EMBEDDINGS_MODEL: str = "intfloat/multilingual-e5-small"
+
+    # google drive api params
+    SCOPES: str
+    SERVICE_ACCOUT_FILE: str
+    PARENT_FOLDER_ID: str
+    OAUTH_CLIENT_FILE: str
+
 
     # rag
     CHUNK_SIZE: int = 1000

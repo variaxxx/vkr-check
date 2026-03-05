@@ -3,3 +3,8 @@ __pycache__/
 .vscode/
 .ruff_cache/
 .env*
+service_account.json
+oauth_*
+token*
+.python-version
+*.jpg

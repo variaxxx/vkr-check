@@ -24,6 +24,7 @@ from src.services.vkr_evaluation_wrapper import check_structure, run_evaluation
 from src.services.vkr_intro_checker import VKRIntroductionChecker
 from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
+from src.services.google_store import GooglePdfStorage
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -59,6 +60,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     application_checker = di.get(ApplicationChecker)
     literature_checker = di.get(LiteratureChecker)
     annotation_checker = di.get(VKRAnnotationChecker)
+    google_storage_qr = di.get(GooglePdfStorage)
 
     doc = db.get(Document, doc_id)
     if doc is None:
@@ -213,6 +215,16 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         )
 
         print("[DEBUG] PDF report generated")
+
+        print("[DEBUG] Начинаем загрузку отчета на Google Drive")
+        google_link = google_storage_qr.upload_pdf(pdf_report)
+        print(f"[DEBUG] Отчет загружен на Google Drive: {google_link}")
+
+        with open('vkr_qr.pdf', "wb") as f:
+            f.write(pdf_report.getbuffer())
+        # в qr выдается путь, куда сохранился новый pdf с qr кодом 
+        qr = google_storage_qr.generate_qr_code(google_link, "vkr_qr.pdf")
+        print("[DEBUG] PDF обновлен с qr-code")
 
         # Сохранение результатов
         for student in fio_list:
