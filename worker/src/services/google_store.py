@@ -2,12 +2,13 @@ import mimetypes
 import os
 from io import BytesIO
 from pathlib import Path
+from datetime import datetime
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 from pypdf import PdfReader, PdfWriter, Transformation
 from PIL import Image
 import segno
@@ -68,20 +69,20 @@ class GooglePdfStorage:
             .execute()
         )
 
-    def upload_pdf(self, pdf_path: str):
+    def upload_pdf(self, pdf_bytes: BytesIO):
         """
         Загружает пдф по пути на гугл драйв и делает его публичным
         """
-        basename = os.path.basename(pdf_path)
+        # basename = os.path.basename(pdf_path)
         mime = "application/pdf"
-        guessed_mime, _ = mimetypes.guess_type(pdf_path)
-        mime = guessed_mime or mime
+        # guessed_mime, _ = mimetypes.guess_type(pdf_path)
+        # mime = guessed_mime or mime
         creds = self.auth()
         service = build("drive", "v3", credentials=creds)
 
-        file_metadata = {"name": basename, "parents": [self.parent_folder_id], "mimeType": mime}
+        file_metadata = {"name": f"vkr_report_{datetime.now().strftime("%Y-%m-%d")}", "parents": [self.parent_folder_id], "mimeType": mime}
 
-        media = MediaFileUpload(pdf_path, mimetype=mime, resumable=True)
+        media = MediaFileUpload(pdf_bytes, mimetype=mime, resumable=True)
 
         created = (
             service.files()
@@ -108,7 +109,7 @@ class GooglePdfStorage:
 
         return web_link
     
-    def generate_qr_code(self, data: str, pdf_path: str):
+    def generate_qr_code(self, data: str, pdf_bytes: BytesIO) -> BytesIO:
         """
         Генерит QR-code и вставляет его в pdf
         """
@@ -122,7 +123,7 @@ class GooglePdfStorage:
         qr_img.save(qr_pdf_buffer, format="PDF")
         qr_pdf_buffer.seek(0)
 
-        reader = PdfReader(pdf_path)
+        reader = PdfReader(pdf_bytes)
         writer = PdfWriter()
 
         first_page = reader.pages[0]
@@ -139,7 +140,8 @@ class GooglePdfStorage:
         for page in reader.pages:
             writer.add_page(page)
 
-        with open(pdf_path, "wb") as output_stream:
-            writer.write(output_stream)
+        output_stream = BytesIO()
+        writer.write(output_stream)
+        output_stream.seek(0)
 
-        return pdf_path
+        return output_stream
