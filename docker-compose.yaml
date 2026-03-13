@@ -90,8 +90,6 @@ services:
     restart: unless-stopped
     env_file:
       - ./worker/.env.production
-    volumes:
-      - ./worker/oauth_client.json:/app/oauth_client.json:ro
     depends_on:
       - minio
       - postgres
