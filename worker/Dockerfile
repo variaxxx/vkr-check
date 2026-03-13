@@ -38,11 +38,12 @@ RUN apt-get update && apt-get install -y \
   libcairo2 \
   libgdk-pixbuf-2.0-0 \
   poppler-utils \
+  libreoffice \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/src /app/src
-  
+
 ENV PATH="/app/.venv/bin:$PATH" \
   OPENCV_IO_ENABLE_OPENEXR=0
 
