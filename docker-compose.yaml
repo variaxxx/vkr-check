@@ -96,6 +96,9 @@ services:
       - rabbitmq
     networks:
       - backend
+    volumes:
+      - ./worker/oauth_client.json:/app/oauth_client.json
+      - ./worker/token.json:/app/token.json
 
   frontend:
     container_name: vkr-check-frontend

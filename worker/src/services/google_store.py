@@ -41,22 +41,27 @@ class GooglePdfStorage:
         return raw_path
 
     def auth(self):
-        creds = None
+        if not os.path.exists(self.token_file):
+            raise RuntimeError("token.json not found")
 
-        if os.path.exists(self.token_file):
-            creds = Credentials.from_authorized_user_file(self.token_file, scopes=self.scopes)
+        creds = Credentials.from_authorized_user_file(self.token_file, scopes=self.scopes)
 
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
+        if not creds.valid:
+            if creds.expired and creds.refresh_token:
                 creds.refresh(Request())
+                with open(self.token_file, "w") as token:
+                    token.write(creds.to_json())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(self.oauth_client_file, self.scopes)
-                creds = flow.run_local_server(port=0)
-
-            with open(self.token_file, "w") as token:
-                token.write(creds.to_json())
+                raise RuntimeError("OAuth token is invalid and cannot be refreshed")
 
         return creds
+
+        # creds = Credentials.from_service_account_file(
+        #     filename=self.service_account_file,
+        #     scopes=self.scopes
+        # )
+        # return creds
+
 
     def _get_parent_folder_meta(self, service):
         return (
@@ -79,18 +84,24 @@ class GooglePdfStorage:
         # mime = guessed_mime or mime
         creds = self.auth()
         service = build("drive", "v3", credentials=creds)
+        b = datetime.now().strftime("%Y-%m-%d")
+        file_metadata = {
+            "name": f"vkr_report_{b}", 
+            "parents": [self.parent_folder_id], 
+            "mimeType": mime
+        }
 
-        file_metadata = {"name": f"vkr_report_{datetime.now().strftime("%Y-%m-%d")}", "parents": [self.parent_folder_id], "mimeType": mime}
-
-        media = MediaFileUpload(pdf_bytes, mimetype=mime, resumable=True)
-
+        media = MediaIoBaseUpload(
+            pdf_bytes, 
+            mimetype=mime, 
+            resumable=True
+        )
         created = (
             service.files()
             .create(
                 body=file_metadata,
                 media_body=media,
                 fields="id, webViewLink",
-                supportsAllDrives=True,
             )
             .execute()
         )
@@ -100,7 +111,6 @@ class GooglePdfStorage:
         service.permissions().create(
             body=file_permission,
             fileId=created.get("id"),
-            supportsAllDrives=True,
         ).execute()
         web_link = created.get("webViewLink")
 
