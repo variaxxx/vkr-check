@@ -223,8 +223,8 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         output_stream = google_storage_qr.generate_qr_code(google_link, pdf_report)
 
         minio.client.put_object(
-            bucket_name=bucket_name,
-            object_name=object_name,
+            bucket_name="reports",
+            object_name=pdf_report_obj_name,
             data=output_stream,
             length=output_stream.getbuffer().nbytes,
             content_type="application/pdf"
