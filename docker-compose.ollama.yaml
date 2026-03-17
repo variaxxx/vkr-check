@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  ollama-server:
+    build: 
+      context: ./ollama
+      dockerfile: Dockerfile
+    container_name: ollama-server
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_GPU_MEMORY_FRACTION=0.8
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    shm_size: '4gb'
+    volumes:
+      - ./ollama/Modelfile:/app/Modelfile
+    ports:
+      - "11434:11434"
+    networks:
+      - ollama_shared_network
+
+networks:
+  ollama_shared_network:
+    external: true
