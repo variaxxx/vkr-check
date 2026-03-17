@@ -8,4 +8,4 @@ docker logs -f vkr-check-worker
 
 docker exec -it vkr-check-worker curl -i http://ollama-server:11434/health
 
-docker exec -it ollama-server ollama run gemma-3n "Привет"
+docker exec -it ollama-server ollama run  "Привет"
