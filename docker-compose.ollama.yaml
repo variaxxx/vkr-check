@@ -26,7 +26,3 @@ services:
       - "11434:11434"
     networks:
       - ollama_shared_network
-
-networks:
-  ollama_shared_network:
-    external: true
