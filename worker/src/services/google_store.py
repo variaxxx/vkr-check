@@ -41,18 +41,26 @@ class GooglePdfStorage:
         return raw_path
 
     def auth(self):
-        if not os.path.exists(self.token_file):
-            raise RuntimeError("token.json not found")
+        creds = None
 
-        creds = Credentials.from_authorized_user_file(self.token_file, scopes=self.scopes)
+        if os.path.exists(self.token_file):
+            creds = Credentials.from_authorized_user_file(self.token_file, scopes=self.scopes)
 
-        if not creds.valid:
-            if creds.expired and creds.refresh_token:
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
-                with open(self.token_file, "w") as token:
-                    token.write(creds.to_json())
             else:
-                raise RuntimeError("OAuth token is invalid and cannot be refreshed")
+                if not os.path.exists(self.oauth_client_file):
+                    raise RuntimeError("oauth_client.json not found")
+
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    self.oauth_client_file,
+                    self.scopes,
+                )
+                creds = flow.run_local_server(port=0)
+
+            with open(self.token_file, "w") as token:
+                token.write(creds.to_json())
 
         return creds
 
