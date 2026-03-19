@@ -46,8 +46,8 @@ services:
     image: keycloak/keycloak:26.3.2
     container_name: keycloak
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: temporary-admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: password
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_PASSWORD}
     volumes:
       - keycloak_data:/opt/keycloak/data
     ports:
