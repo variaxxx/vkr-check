@@ -49,6 +49,7 @@ class DocumentService:
             if file.content_type not in ALLOWED_FILE_TYPES:
                 skipped_count += 1
                 skipped_files.append(file.filename)
+                continue
 
             object_name = f"{uuid.uuid4()}-{file.filename}"
 
@@ -158,7 +159,7 @@ class DocumentService:
         status: Optional[DocumentStatus],
     ) -> FindManyResponse[DocumentShortResponse]:
         if not len(query):
-            raise HTTPException(401, "Empty query provided")
+            raise HTTPException(400, "Empty query provided")
 
         limit = clamp(limit, 0, 50) if limit is not None else 25
         offset = max(0, offset) if offset is not None else 0
