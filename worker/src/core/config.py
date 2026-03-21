@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # model params
     TEMPERATURE: float = 0.1
     MAX_TOKENS: int = 8192
-    MODEL_NAME: str = "hf.co/unsloth/gemma-3n-E4B-it-GGUF:Q4_K_XL"
+    MODEL_NAME: str
     EMBEDDINGS_MODEL: str = "intfloat/multilingual-e5-small"
 
     # google drive api params
