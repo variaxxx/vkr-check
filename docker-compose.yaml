@@ -20,7 +20,7 @@ services:
       timeout: 30s
       retries: 3
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT}:5432"
 
   minio:
     image: minio/minio:latest
@@ -51,7 +51,7 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
     ports:
-      - "8155:8080"
+      - "${KC_PORT}:8080"
     command:
       - start-dev
     networks:
@@ -60,8 +60,8 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RMQ_PORT}:5672"
+      - "${RMQ_PANEL_PORT}:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RMQ_PASS}
@@ -78,6 +78,11 @@ services:
     command: uvicorn src.main:app --host=0.0.0.0 --port=8000
     env_file:
       - ./backend/.env.production
+    environment:
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -86,7 +91,7 @@ services:
       rabbitmq:
         condition: service_started
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT}:8000"
     networks:
       - backend
 
@@ -96,6 +101,11 @@ services:
     restart: unless-stopped
     env_file:
       - ./worker/.env.production
+    environment:
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -126,7 +136,7 @@ services:
     image: nginx:stable-alpine
     restart: on-failure
     ports:
-      - "4200:80"
+      - "${FRONTEND_PORT}:80"
     volumes:
       - "./nginx.conf:/etc/nginx/nginx.conf"
     depends_on:

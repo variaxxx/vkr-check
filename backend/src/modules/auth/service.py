@@ -20,9 +20,9 @@ class AuthService:
         self.user_service = user_service
         self.config = config
         self.JWKS_URL = (
-            f"{'http' if config.DEBUG else 'https'}://{config.KEYCLOACK_HOST}/"
-            f"{'auth/' if config.KEYCLOACK_USES_AUTH_ENDPOINT else ''}"
-            f"realms/{config.KEYCLOACK_REALM}/protocol/openid-connect/certs"
+            f"{'http' if config.ENV == "dev" else 'https'}://{config.KC_HOST}/"
+            f"{'auth/' if config.KC_USES_AUTH_ENDPOINT else ''}"
+            f"realms/{config.KC_REALM}/protocol/openid-connect/certs"
         )
 
     async def login(self, token: str) -> TokensResponse:
@@ -42,7 +42,7 @@ class AuthService:
             raise HTTPException(401, "Invalid token")
 
         roles = payload["realm_access"]["roles"]
-        if not any(x in self.config.KEYCLOACK_ALLOWED_ROLES for x in roles):
+        if not any(x in self.config.KC_ALLOWED_ROLES for x in roles):
             raise HTTPException(403, "Forbidden")
 
         user_id = payload["sub"]

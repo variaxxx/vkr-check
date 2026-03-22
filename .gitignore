@@ -1,6 +1,9 @@
 s3/
 .vscode/
+
 .env
+!.env.example
+
 *.python-version*
 .DS_Store
 node_modules/

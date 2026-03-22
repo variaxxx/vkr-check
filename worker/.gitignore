@@ -3,6 +3,8 @@ __pycache__/
 .vscode/
 .ruff_cache/
 .env*
+!.env.example
+
 service_account.json
 oauth_*
 token*
