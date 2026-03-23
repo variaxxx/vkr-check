@@ -108,7 +108,8 @@ docker exec -it vkr-check-backend alembic upgrade head
    `OAUTH_CLIENT_FILE=oauth_client.json`
    `PARENT_FOLDER_ID=<id папки на Google Drive>`
 
-8. Запустите воркер локально. При первой авторизации откроется браузер Google, после подтверждения рядом будет создан файл `token.json`.
+8. Перейдите в папку `worker/` и запустите скрипт `token_generate.sh`.
+   Скрипт выполнит авторизацию через `oauth_client.json`, создаст файл `token.json` в директории `worker/` и затем отправит его на сервер командой `scp ./token.json user@10.18.164.191:/home/user/vkr-check/worker/token.json`.
 
 Примечания:
 
