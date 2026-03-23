@@ -220,11 +220,11 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         google_link = google_storage_qr.upload_pdf(pdf_report)
         print(f"[DEBUG] Отчет загружен на Google Drive: {google_link}")
 
-        output_stream = google_storage_qr.generate_qr_code(google_link, pdf_report)
+        output_stream = google_storage_qr.generate_qr_code(google_link, file_buffer)
 
         minio.client.put_object(
-            bucket_name="reports",
-            object_name=pdf_report_obj_name,
+            bucket_name=bucket_name,
+            object_name=object_name,
             data=output_stream,
             length=output_stream.getbuffer().nbytes,
             content_type="application/pdf"
