@@ -249,7 +249,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         doc.topic = theme if isinstance(theme, str) else (theme[0] if theme else "")
         doc.report_url = f"reports/{pdf_report_obj_name}"
 
-        if doc.score < 6:
+        if report_dict["summary"].get("status", 0) == 0:
             doc.status = DocumentStatus.REJECTED
         else:
             doc.status = DocumentStatus.APPROVED
