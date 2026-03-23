@@ -108,8 +108,13 @@ docker exec -it vkr-check-backend alembic upgrade head
    `OAUTH_CLIENT_FILE=oauth_client.json`
    `PARENT_FOLDER_ID=<id папки на Google Drive>`
 
-8. Перейдите в папку `worker/` и запустите скрипт `token_generate.sh`.
-   Скрипт выполнит авторизацию через `oauth_client.json`, создаст файл `token.json` в директории `worker/` и затем отправит его на сервер командой `scp ./token.json user@10.18.164.191:/home/user/vkr-check/worker/token.json`.
+8. Перейдите в папку `worker/` и запустите скрипт `token_generate.sh`:
+   ```
+   cd worker
+   ./token_generate.sh
+   ```
+   Потребует ввести пароль от ВМ
+   Скрипт выполнит авторизацию через `oauth_client.json`, создаст файл `token.json` в директории `worker/` и отправит на ВМ.
 
 Примечания:
 
