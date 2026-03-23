@@ -30,15 +30,20 @@ class VKRReport:
 
         total_ev_scores = [e.get("score", 0) for e in evaluations if e.get("section") != "application"]
 
-        if application_ev.get("found") == 1:
+        if application_ev["found"] == 1:
             avg_score = (avg_task_score + sum(total_ev_scores) + application_ev.get("score")) / (len(evaluations) + 1)
+            bad_points = len([i for i in (total_ev_scores + [avg_task_score] + [application_ev.get("score")]) if i < 4])
         else:
             avg_score = (avg_task_score + sum(total_ev_scores)) / len(evaluations)
+            bad_points = len([i for i in (total_ev_scores + [avg_task_score]) if i < 4])
+                        
+        status = 0 if bad_points > 2 else 1
 
         return {
             "average_score": round(avg_score, 2),
             "compliance_percentage": round(avg_score * 10, 1),
             "total_points_analyzed": len(total_scores),
+            "status": status
         }
 
     @staticmethod
