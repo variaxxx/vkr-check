@@ -117,7 +117,9 @@ class BaseProcessor:
                     chunks.append({"header": current_header, "text": text_before})
                     current_header = new_header
                     current_content = []
-
+            else:
+                current_content.append(line)
+                
         # Сохраняем последний кусок
         last_text = get_clean_text(current_content)
         if last_text or current_header != "Титульный лист":
