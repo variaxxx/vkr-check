@@ -10,7 +10,7 @@ RUN wget -q -O /app/mmproj-BF16.gguf \
     https://huggingface.co/unsloth/gemma-3-12b-it-GGUF/resolve/main/mmproj-BF16.gguf
 RUN nohup bash -c "ollama serve &" && \
     sleep 10 && \
-    ollama pull hf.co/unsloth/gemma-3-12b-it-GGUF:Q4_K_M && \
+    ollama pull hf.co/unsloth/gemma-3-12b-it-GGUF:UD-Q4_K_XL && \
     ollama create gemma3-12b -f /app/Modelfile && \
     pkill ollama
 EXPOSE 11434
