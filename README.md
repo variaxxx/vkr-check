@@ -1,6 +1,8 @@
 # Проверка ВКР
 
-# Ollama
+# Развертывание
+
+## Ollama
 Используемая модель (обязательно Image-text-to-text) https://huggingface.co/unsloth/gemma-3-12b-it-GGUF
 
 При смене модели изменить:
@@ -17,7 +19,7 @@ sudo systemctl restart docker
 sudo docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
 ```
 
-## Тестирование Ollama после сборки контейнера
+### Тестирование Ollama после сборки контейнера
 
 Проверка доступных моделей:
 ```bash
@@ -40,7 +42,7 @@ docker exec -it ollama-server ollama run gemma3-12b "Привет"
 ```
 
 
-# Создание .env файлов
+## Создание .env файлов
 ```bash
 cp ./backend/.env.example ./backend/.env.production
 cp ./worker/.env.example ./worker/.env.production
@@ -50,19 +52,19 @@ cp .env.example .env
 
 Затем настраиваем окружение для фронтенда (`frontend/src/environments/environment.prod.ts`), следуя комментариям
 
-# Сборка
+## Сборка
 ```bash
 docker compose up --build -d
 ```
 
-# Настройка
+## Настройка
 
-## Миграции БД
+### Миграции БД
 ```bash
 docker exec -it vkr-check-backend alembic upgrade head
 ```
 
-## Keycloak
+### Keycloak
 Авторизуемся в админ панели (по дефолту будет http://localhost:8155) 
 
 1. В навбаре жмем `Manage realms` -> `Create realm` -> устанавливаем `Realm name` такой же как KC_REALM из `backend/.env.production` и `frontend/src/environments/environment.prod.ts` -> `Create`
@@ -81,7 +83,7 @@ docker exec -it vkr-check-backend alembic upgrade head
 
 Далее авторизация в сервисе будет по Username и паролю созданного пользователя.
 
-## Установка credentials для QR
+### Установка credentials для QR
 
 Для загрузки PDF в Google Drive воркер использует OAuth-клиент из файла `oauth_client.json`.
 
@@ -121,3 +123,5 @@ docker exec -it vkr-check-backend alembic upgrade head
 - Аккаунт, под которым вы проходите OAuth-авторизацию, должен иметь доступ к папке, указанной в `PARENT_FOLDER_ID`.(эта папка уже создана)
 
 **Конец.**
+
+> Инструкция разработчика лежит в `DEVDOCS.md`
