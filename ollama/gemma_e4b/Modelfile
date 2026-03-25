@@ -1,4 +1,4 @@
-FROM google/gemma-3n-E4B-it
+FROM gemma3n:e4b
 
 PARAMETER temperature 0.1
 PARAMETER top_k 64
