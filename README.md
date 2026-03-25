@@ -10,9 +10,9 @@
 - ollama/<new_model>/Modelfile
 - ollama/<new_model>/entrypoint.sh (скрипт для "теплого" старта)
 
-При смене готовой модели (/ollama/gemma_12b или /ollama/gemma_e4b) изменть:
-- /.env - изменить MODEL_NAME на новое имя в ollama list (gemma3-12b или gemma3n-e4b)
-- /.env - изменить MODEL_DIR на имя каталога в /ollama (gemma_12b или gemma_e4b)
+При смене готовой модели (/ollama/gemma_12b или /ollama/gemma3_27b) изменть:
+- /.env - изменить MODEL_NAME на новое имя в ollama list (gemma3-12b или gemma3-27b)
+- /.env - изменить MODEL_DIR на имя каталога в /ollama (gemma_12b или gemma_27b)
 
 Подразумевается что докер уже есть, проверяется доступность видеокарты из докера
 ```bash

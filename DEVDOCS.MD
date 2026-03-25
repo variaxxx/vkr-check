@@ -98,11 +98,13 @@ npm start
 
 Протестированные варианты моделей:
 
-- `google/gemma-3n-E4B-it` (в квантованной версии нет мультимодальности) - 8b модель, 24Гб vRAM, неплохие результаты
+- `google/gemma-3n-E4B-it` (в квантованной версии нет мультимодальности, и в ollama lib и на hf) - 8b модель, 24Гб vRAM, неплохие результаты, запуск только с vllm (worker/src/services/README.MD)
 
 - `google/gemma-3n-E2B-it` - 4b модель, 16Гб vRAM, но слабовата
 
-- `google/gemma-3-12b-it` (hf.co/unsloth/gemma-3-12b-it-GGUF:UD-Q4_K_XL) - 12b модель, в скобках максимальное квантование для 16Гб vRAM, но слабовата
+- `google/gemma-3-12b` - 12b модель, запуск под ollama для 16Гб vRAM, может быть слабовата
+
+- `google/gemma-3-27b` - 27b модель, запуск под ollama для 24Гб vRAM, отличные результаты
 
 ## worker
 
