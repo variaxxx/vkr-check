@@ -76,7 +76,7 @@ class LLMService:
         for b64 in pages:
             human_content.append({
                 "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
+                "image_url": {"url": f"data:image/png;base64,{b64}"}
             })
 
         messages.append(HumanMessage(content=human_content))

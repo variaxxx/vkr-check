@@ -129,18 +129,24 @@ class BaseProcessor:
 
 
 class PDFProcessor(BaseProcessor):
+    PAGE_RENDER_DPI = 400
+    PAGE_IMAGE_FORMAT = "PNG"
+
     @staticmethod
     def get_pages_as_base64(
         pdf_file: io.BytesIO, first_page: int, last_page: int
     ) -> List[str]:
         pdf_file.seek(0)
         images = convert_from_bytes(
-            pdf_file.read(), first_page=first_page, last_page=last_page, dpi=200
+            pdf_file.read(),
+            first_page=first_page,
+            last_page=last_page,
+            dpi=PDFProcessor.PAGE_RENDER_DPI,
         )
         encoded = []
         for img in images:
             buf = io.BytesIO()
-            img.save(buf, format="JPEG", quality=85)
+            img.save(buf, format=PDFProcessor.PAGE_IMAGE_FORMAT)
             encoded.append(base64.b64encode(buf.getvalue()).decode("utf-8"))
         return encoded
 

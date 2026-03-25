@@ -29,23 +29,61 @@ class MarkupPages:
         self.llm_service = llm_service
         self.doc_processor = doc_processor
         self.verbose = False
+        self.detection_upscale = 2.0
+        self.detection_imgsz = 1600
         self.model = YOLO(MODEL_PATH, verbose=False)
 
-    def sign_detect(
-        self, image: PILImage.Image, threshold: float = 0.3
-    ) -> bool:
+    def prepare_image_for_detection(self, image: PILImage.Image) -> PILImage.Image:
         """
-        Детектит, есть ли подписи на изображении.
+        Увеличивает изображение перед инференсом, чтобы мелкие подписи
+        занимали больше пикселей и лучше детектились моделью.
         """
         if image is None:
             raise ValueError("Изображение не может быть None")
 
-        results = self.model(image, conf=threshold, verbose=self.verbose)
+        prepared = image.convert("RGB")
+        if self.detection_upscale <= 1:
+            return prepared
+
+        width, height = prepared.size
+        resized_size = (
+            int(width * self.detection_upscale),
+            int(height * self.detection_upscale),
+        )
+        return prepared.resize(resized_size, PILImage.Resampling.LANCZOS)
+
+    def run_detection(
+        self, image: PILImage.Image, threshold: float = 0.0
+    ):
+        """
+        Готовит изображение и запускает YOLO с увеличенным inference size,
+        чтобы модель меньше теряла мелкие подписи при ресайзе.
+        """
+        if image is None:
+            raise ValueError("Изображение не может быть None")
+
+        prepared_image = self.prepare_image_for_detection(image)
+        results = self.model(
+            prepared_image,
+            conf=threshold,
+            imgsz=self.detection_imgsz,
+            verbose=self.verbose,
+        )
 
         if not results or len(results) == 0:
             raise ValueError("Модель не вернула результаты")
 
-        detections = sv.Detections.from_ultralytics(results[0])
+        return results[0]
+
+    def sign_detect(
+        self, image: PILImage.Image, threshold: float = 0.0
+    ) -> bool:
+        """
+        Детектит, есть ли подписи на изображении.
+        """
+        detections = sv.Detections.from_ultralytics(
+            self.run_detection(image, threshold)
+        )
         return len(detections.xyxy) > 0
 
     async def markup_pdf(self, pdf_bytes: io.BytesIO) -> Tuple[bool, List[int]]:
@@ -85,7 +123,7 @@ class MarkupPages:
     "3. Если рядом с фамилией пустая линия/пустой блок без подписи → это отсутствие подписи.\n"
     "4. Пустые блоки без фамилии рядом — игнорируй.\n"
     "5. Если у фамилии нет отдельного блока для подписи — игнорируй (это не ошибка).\n"
-    "6. Если не уверен, пустой блок или нет — считай, что подпись есть (важно для повышения recall).\n\n"
+    "6. Если не уверен, пустой блок или нет — считай, что это 1.\n\n"
     "Формат ответа (строго):\n"
     "[ОТВЕТ]: 1 или 0\n"
     "[ПОЯСНЕНИЕ]: перечисли фамилии без подписи (если таких нет — напиши \"все подписи присутствуют\")"
