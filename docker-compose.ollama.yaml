@@ -3,7 +3,7 @@ version: '3.8'
 services:
   ollama-server:
     build: 
-      context: ./ollama
+      context: ./ollama/${MODEL_DIR}
       dockerfile: Dockerfile
     container_name: ollama-server
     restart: unless-stopped
@@ -21,7 +21,7 @@ services:
               capabilities: [gpu]
     shm_size: '4gb'
     volumes:
-      - ./ollama/Modelfile:/app/Modelfile
+      - ./ollama/${MODEL_DIR}/Modelfile:/app/Modelfile
     ports:
       - "11434:11434"
     networks:

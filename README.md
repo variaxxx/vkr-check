@@ -5,11 +5,14 @@
 ## Ollama
 Используемая модель (обязательно Image-text-to-text) https://huggingface.co/unsloth/gemma-3-12b-it-GGUF
 
-При смене модели изменить:
-- ollama/Dockerfile
-- ollama/Modelfile
-- ollama/entrypoint.sh (скрипт для "теплого" старта)
-- worker/.env.production 
+При полной смене модели добавить папку в /ollama/:
+- ollama/<new_model>/Dockerfile
+- ollama/<new_model>/Modelfile
+- ollama/<new_model>/entrypoint.sh (скрипт для "теплого" старта)
+
+При смене готовой модели (/ollama/gemma_12b или /ollama/gemma_e4b) изменть:
+- /.env - изменить MODEL_NAME на новое имя в ollama list (gemma3-12b или gemma3n-e4b)
+- /.env - изменить MODEL_DIR на имя каталога в /ollama (gemma_12b или gemma_e4b)
 
 Подразумевается что докер уже есть, проверяется доступность видеокарты из докера
 ```bash
