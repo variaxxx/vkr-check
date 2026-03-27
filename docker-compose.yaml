@@ -1,8 +1,5 @@
 version: "3.9"
 
-include:
-  - path: docker-compose.ollama.yaml
-
 services:
   postgres:
     image: postgres:17
@@ -115,11 +112,9 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_started
-      ollama-server:
-        condition: service_started
     networks:
       - backend
-      - ollama_shared_network
+      - llm_shared_network
     volumes:
       - ./worker/oauth_client.json:/app/oauth_client.json
       - ./worker/token.json:/app/token.json
@@ -147,9 +142,13 @@ services:
     networks:
       - backend
 
+include:
+  - path: docker-compose.ollama.yaml
+  - path: docker-compose.vllm.yaml
+
 networks:
   backend:
-  ollama_shared_network:
+  llm_shared_network:
     driver: bridge
 
 volumes:

@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   ollama-server:
+    profiles: ["ollama"]
     build: 
       context: ./ollama/${MODEL_DIR}
       dockerfile: Dockerfile
@@ -25,4 +26,4 @@ services:
     ports:
       - "11434:11434"
     networks:
-      - ollama_shared_network
+      - llm_shared_network

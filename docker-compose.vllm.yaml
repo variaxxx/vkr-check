@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  vllm-server:
+    profiles: ["vllm"]
+    build: ./vllm/${MODEL_DIR}
+    container_name: llm-server
+    restart: unless-stopped
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    shm_size: '4gb'
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    networks:
+      - llm_shared_network
