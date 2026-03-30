@@ -7,7 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y libsndfile1 && \
     pip install soundfile
 
-EXPOSE 8000
+EXPOSE 8001
 
 ENTRYPOINT ["python3", "-m", "vllm.entrypoints.openai.api_server"]
 
@@ -18,4 +18,4 @@ CMD ["--model", "google/gemma-3n-E4B-it", \
      "--gpu-memory-utilization", "0.8", \
      "--no-enable-prefix-caching", \
      "--max-model-len", "16384", \
-     "--port", "8000"]
+     "--port", "8001"]

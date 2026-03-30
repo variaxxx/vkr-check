@@ -19,5 +19,7 @@ services:
     shm_size: '4gb'
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
+    ports:
+      - "8001:8001"
     networks:
       - llm_shared_network
