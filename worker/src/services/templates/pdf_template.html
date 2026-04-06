@@ -11,8 +11,6 @@
   {% set _ = EVAL_BY_SECTION.update({ e.section: e }) %}
 {% endfor %}
 
-{% set is_pass = (data.summary.compliance_percentage|float) >= 60 %}
-
 <!doctype html>
 <html lang="ru">
 <head>
@@ -267,7 +265,7 @@
                   <span class="muted">баллов</span>
                 </span>
                 &nbsp;
-                {% if is_pass %}
+                {% if data.summary.status %}
                   <span class="pill pill--success">Зачёт</span>
                 {% else %}
                   <span class="pill pill--danger">Незачёт</span>
