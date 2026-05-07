@@ -2,4 +2,11 @@ __pycache__
 __pycache__/
 .vscode/
 .ruff_cache/
-.env
+.env*
+!.env.example
+
+service_account.json
+oauth_*
+token*
+.python-version
+*.jpg

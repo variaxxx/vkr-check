@@ -24,11 +24,14 @@ from src.services.vkr_evaluation_wrapper import check_structure, run_evaluation
 from src.services.vkr_intro_checker import VKRIntroductionChecker
 from src.services.vkr_literature_check import LiteratureChecker
 from src.services.vkr_report import VKRReport
+from src.services.google_store import GooglePdfStorage
 
 ALLOWED_FILE_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/pdf",
 ]
+
+PDF_REPORT_TEMPLATE = "src/services/templates/pdf_template.html"
 
 
 @worker.task(
@@ -57,6 +60,7 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
     application_checker = di.get(ApplicationChecker)
     literature_checker = di.get(LiteratureChecker)
     annotation_checker = di.get(VKRAnnotationChecker)
+    google_storage_qr = di.get(GooglePdfStorage)
 
     doc = db.get(Document, doc_id)
     if doc is None:
@@ -199,6 +203,35 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
         )
         print("[DEBUG] Report generated")
 
+        pdf_report = vkr_report.generate_pdf_report(report_dict, PDF_REPORT_TEMPLATE)
+        pdf_report_obj_name = ".".join(object_name.split(".")[:-1]) + ".pdf"
+
+        minio.client.put_object(
+            bucket_name="reports",
+            object_name=pdf_report_obj_name,
+            data=pdf_report,
+            length=pdf_report.getbuffer().nbytes,
+            content_type="application/pdf",
+        )
+
+        print("[DEBUG] PDF report generated")
+
+        print("[DEBUG] Начинаем загрузку отчета на Google Drive")
+        google_link = google_storage_qr.upload_pdf(pdf_report)
+        print(f"[DEBUG] Отчет загружен на Google Drive: {google_link}")
+
+        output_stream = google_storage_qr.generate_qr_code(google_link, file_buffer)
+
+        minio.client.put_object(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            data=output_stream,
+            length=output_stream.getbuffer().nbytes,
+            content_type="application/pdf"
+        )
+
+        print("[DEBUG] PDF обновлен с qr-code")
+
         # Сохранение результатов
         for student in fio_list:
             parts = student.split()
@@ -214,8 +247,9 @@ def process_document(di, self, doc_id: Union[uuid.UUID, str]):
 
         doc.score = report_dict["summary"].get("average_score", 0)
         doc.topic = theme if isinstance(theme, str) else (theme[0] if theme else "")
+        doc.report_url = f"reports/{pdf_report_obj_name}"
 
-        if doc.score < 6:
+        if report_dict["summary"].get("status", 0) == 0:
             doc.status = DocumentStatus.REJECTED
         else:
             doc.status = DocumentStatus.APPROVED

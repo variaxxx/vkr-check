@@ -1,3 +1,8 @@
+import io
+import os
+import shutil
+import subprocess
+import tempfile
 import uuid
 from typing import Optional
 
@@ -38,7 +43,7 @@ class DocumentService:
         ALLOWED_FILE_TYPES = [
             # .docx
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            # ,pdf
+            # .pdf
             "application/pdf",
         ]
         uploaded_docs = []
@@ -49,21 +54,46 @@ class DocumentService:
             if file.content_type not in ALLOWED_FILE_TYPES:
                 skipped_count += 1
                 skipped_files.append(file.filename)
+                continue
 
-            object_name = f"{uuid.uuid4()}-{file.filename}"
+            target_file_name = file.filename or "document"
+            object_name = f"{uuid.uuid4()}-{target_file_name}"
 
-            self.minio.client.put_object(
-                bucket_name="documents",
-                object_name=object_name,
-                data=file.file,
-                length=-1,
-                part_size=10 * 1024 * 1024,
-                content_type=file.content_type,
-            )
+            if (
+                file.content_type
+                == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ):
+                file_bytes = await file.read()
+                upload_data = self._docx_to_pdf_bytes(io.BytesIO(file_bytes))
+
+                target_file_name = (
+                    f"{os.path.splitext(target_file_name)[0]}.pdf"
+                )
+                object_name = f"{uuid.uuid4()}.pdf"
+
+                upload_data.seek(0)
+                self.minio.client.put_object(
+                    bucket_name="documents",
+                    object_name=object_name,
+                    data=upload_data,
+                    length=upload_data.getbuffer().nbytes,
+                    part_size=10 * 1024 * 1024,
+                    content_type="application/pdf",
+                )
+            else:
+                file.file.seek(0)
+                self.minio.client.put_object(
+                    bucket_name="documents",
+                    object_name=object_name,
+                    data=file.file,
+                    length=-1,
+                    part_size=10 * 1024 * 1024,
+                    content_type="application/pdf",
+                )
 
             new_doc = Document(
                 file_url=f"documents/{object_name}",
-                original_name=file.filename,
+                original_name=target_file_name,
                 user_id=user.id,
             )
             self.db.add(new_doc)
@@ -109,9 +139,9 @@ class DocumentService:
                 media_type=headers.get(
                     "Content-Type", "application/octet-stream"
                 ),
-                headers={
-                    "Content-Disposition": f'attachment; filename="{document.original_name}"'
-                },
+                # headers={
+                #     "Content-Disposition": f'attachment; filename="{document.original_name}"'
+                # },
             )
         except S3Error:
             raise HTTPException(404, "File not found")
@@ -158,7 +188,7 @@ class DocumentService:
         status: Optional[DocumentStatus],
     ) -> FindManyResponse[DocumentShortResponse]:
         if not len(query):
-            raise HTTPException(401, "Empty query provided")
+            raise HTTPException(400, "Empty query provided")
 
         limit = clamp(limit, 0, 50) if limit is not None else 25
         offset = max(0, offset) if offset is not None else 0
@@ -221,3 +251,51 @@ class DocumentService:
 
     def _to_status(self, status):
         return DocumentStatus[status] if isinstance(status, str) else status
+
+    def _docx_to_pdf_bytes(self, docx_file: io.BytesIO) -> io.BytesIO:
+        if not shutil.which("libreoffice") and not shutil.which("soffice"):
+            raise EnvironmentError(
+                "LibreOffice not found. Install it with: apt-get install libreoffice"
+            )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            input_path = os.path.join(tmp_dir, "input.docx")
+            with open(input_path, "wb") as f:
+                f.write(docx_file.getvalue())
+
+            try:
+                subprocess.run(
+                    [
+                        "libreoffice",
+                        "--headless",
+                        "--convert-to",
+                        "pdf",
+                        input_path,
+                        "--outdir",
+                        tmp_dir,
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
+            except subprocess.CalledProcessError:
+                subprocess.run(
+                    [
+                        "soffice",
+                        "--headless",
+                        "--convert-to",
+                        "pdf",
+                        input_path,
+                        "--outdir",
+                        tmp_dir,
+                    ],
+                    check=True,
+                )
+
+            pdf_path = os.path.join(tmp_dir, "input.pdf")
+            if not os.path.exists(pdf_path):
+                raise FileNotFoundError(
+                    "LibreOffice failed to generate PDF file."
+                )
+
+            with open(pdf_path, "rb") as f:
+                return io.BytesIO(f.read())

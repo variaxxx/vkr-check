@@ -22,10 +22,10 @@ class Settings(BaseSettings):
         "http://localhost:4200",
     ]
 
-    KEYCLOACK_HOST: str
-    KEYCLOACK_USES_AUTH_ENDPOINT: bool = True
-    KEYCLOACK_REALM: str
-    KEYCLOACK_ALLOWED_ROLES: list[str] = []
+    KC_HOST: str
+    KC_USES_AUTH_ENDPOINT: bool = True
+    KC_REALM: str
+    KC_ALLOWED_ROLES: list[str] = []
 
     CELERY_BROKER_URL: str
 
@@ -36,7 +36,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 1
 
-    DEBUG: bool = False
     ENV: Literal["prod", "dev"] = "dev"
 
 

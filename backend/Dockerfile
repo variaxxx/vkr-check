@@ -28,7 +28,8 @@ FROM base AS runner
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    libpq5
+    libpq5 \
+    libreoffice
 
 ENV PATH="/app/.venv/bin:$PATH"
 COPY --from=builder /app /app

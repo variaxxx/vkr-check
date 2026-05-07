@@ -103,21 +103,23 @@ class BaseProcessor:
 
             if new_header:
                 text_before = get_clean_text(current_content)
-
-                # ЛОГИКА СКЛЕЙКИ:
-                # Если под текущим заголовком пусто И это не титульник — клеим к заголовку
-                if not text_before and current_header != "Титульный лист":
+                
+                # Проверяем, является ли новый заголовок важным (Введение, Заключение и т.д.)
+                is_anchor = new_header.upper() in BaseProcessor.ANCHOR_SECTIONS
+                
+                # ЛОГИКА СКЛЕЙКИ (ИЗМЕНЕННАЯ):
+                # Клеим только если текст ПРЯМО СОВСЕМ пустой, 
+                # НО НЕ клеим, если новый заголовок — это важный раздел (типа Введения)
+                if not text_before and current_header != "Титульный лист" and not is_anchor:
                     current_header = f"{current_header} {new_header}"
                 else:
-                    # Если текст был, сохраняем старый чанк и начинаем новый
-                    if text_before or current_header != "Титульный лист":
-                        chunks.append({"header": current_header, "text": text_before})
-
+                    # Если текст был ИЛИ это важный якорный заголовок — создаем новый чанк
+                    chunks.append({"header": current_header, "text": text_before})
                     current_header = new_header
                     current_content = []
             else:
                 current_content.append(line)
-
+                
         # Сохраняем последний кусок
         last_text = get_clean_text(current_content)
         if last_text or current_header != "Титульный лист":

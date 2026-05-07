@@ -96,7 +96,7 @@ export class AuthService {
       nonce,
     });
 
-    return `${env.KEYCLOAK_BASE_URL}${env.KEYCLOACK_USES_AUTH_ENDPOINT ? "auth/" : ""}realms/${env.KEYCLOAK_REALM}/protocol/openid-connect/auth?${searchParams.toString()}`;
+    return `${env.KEYCLOAK_BASE_URL}${env.KEYCLOAK_USES_AUTH_ENDPOINT ? "auth/" : ""}realms/${env.KEYCLOAK_REALM}/protocol/openid-connect/auth?${searchParams.toString()}`;
   }
 
   get token(): string | undefined {

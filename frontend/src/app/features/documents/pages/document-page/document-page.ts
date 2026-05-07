@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal 
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
 import { DocumentService, NotificationService } from "@core/services";
+import { ReportsService } from "@core/services/reports.service";
+import { Button } from "@shared/components/button/button";
 import { DocumentStatusPlate } from "@shared/components/document-status-plate/document-status-plate";
 import { Icon } from "@shared/components/icon/icon";
 import { NgxSkeletonLoaderModule } from "ngx-skeleton-loader";
@@ -14,7 +16,7 @@ import { EvaluationsList } from "./components/evaluations-list/evaluations-list"
 
 @Component({
   selector: "app-document-page",
-  imports: [Icon, DocumentStatusPlate, DatePipe, NgxSkeletonLoaderModule, EvaluationsList, AnalysisList],
+  imports: [Icon, DocumentStatusPlate, DatePipe, NgxSkeletonLoaderModule, EvaluationsList, AnalysisList, Button],
   templateUrl: "./document-page.html",
   styleUrl: "./document-page.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +27,7 @@ export class DocumentPage implements OnInit {
   private readonly router = inject(Router);
 
   private readonly docService = inject(DocumentService);
+  private readonly repService = inject(ReportsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly notificationService = inject(NotificationService);
 
@@ -34,16 +37,35 @@ export class DocumentPage implements OnInit {
     this.location.back();
   }
 
-  protected download(
+  protected downloadDoc(
     event: MouseEvent,
-    documentId: string,
-    filename: string,
   ): any {
     event.stopPropagation();
 
     return this.docService.download(
-      documentId,
-      filename,
+      this.document()!.id,
+      this.document()!.original_name,
+    ).subscribe();
+  }
+
+  protected downloadRep(
+    event: MouseEvent,
+  ): any {
+    event.stopPropagation();
+
+    return this.repService.downloadForDoc(
+      this.document()!.id,
+    ).pipe(
+      tap((report) => {
+        const url = URL.createObjectURL(report);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "report.pdf";
+        a.click();
+
+        URL.revokeObjectURL(url);
+      }),
     ).subscribe();
   }
 

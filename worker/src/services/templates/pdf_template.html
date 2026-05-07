@@ -1,0 +1,345 @@
+{% set STRUCTURE = [
+  {"key":"application","title":"Приложение"},
+  {"key":"literature","title":"Список литературы"},
+  {"key":"introduction","title":"Введение"},
+  {"key":"conclusion","title":"Вывод"},
+  {"key":"annotation","title":"Аннотация"},
+] %}
+
+{% set EVAL_BY_SECTION = {} %}
+{% for e in data.evaluations %}
+  {% set _ = EVAL_BY_SECTION.update({ e.section: e }) %}
+{% endfor %}
+
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Отчёт проверки</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 6mm 4mm 8mm 4mm;
+    }
+
+    html, body { height: auto; }
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      color:#0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-size: 12px;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .wrap{
+      width: 100%;
+    }
+
+    .page-title{
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+
+    .page-meta{
+      font-size: 11px;
+      color: #64748b;
+      margin: 0 0 10px;
+    }
+
+    .section{
+      border: 1px solid #e2e8f0;
+      border-radius: 0;
+      background: #fff;
+      box-shadow: none;
+      padding: 10px;
+      margin: 10px 0;
+      page-break-inside: avoid;
+    }
+
+    .section-title{
+      font-size: 13px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+
+    .section--main{
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .section--main table.kv td{
+      padding-top: 18px;
+      padding-bottom: 22px;
+      padding-left: 9px;
+      padding-right: 9px;
+    }
+
+    table.kv{
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 1px solid #e2e8f0;
+    }
+    table.kv td{
+      border-top: 1px solid #e2e8f0;
+      padding: 8px 9px;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    table.kv tr:first-child td{ border-top:none; }
+
+    table.kv td.k{
+      width: 42mm;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 10px;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      border-right: 1px solid #e2e8f0;
+      white-space: normal;
+    }
+
+    .authors-list{
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .authors-list li{ margin: 2px 0; }
+
+    .pill{
+      display: inline-block;
+      padding: 3px 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .pill--success{
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #065f46;
+    }
+    .pill--danger{
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    .score-line{ margin: 0; }
+    .score-big{
+      font-size: 16px;
+      font-weight: 700;
+      display: inline;
+    }
+    .score-big .muted{
+      font-size: 11px;
+      font-weight: 500;
+      color: #64748b;
+      margin-left: 4px;
+    }
+    .subline{
+      color: #64748b;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    table.report{
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+    }
+    table.report th, table.report td{
+      border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 8px 8px;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    table.report th:last-child, table.report td:last-child{ border-right:none; }
+    table.report tr:last-child td{ border-bottom:none; }
+
+    table.report thead th{
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      text-align: left;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    table.report thead { display: table-header-group; }
+
+    .col-title{ width: 36%; }
+    .col-score{ width: 10%; }
+    .col-note{ width: 54%; }
+
+    .report--structure .col-title { width: 20%; }
+    .report--structure .col-score { width: 10%; }
+    .report--structure .col-note  { width: 70%; }
+
+    .score{
+      display: inline-block;
+      font-weight: 500;
+      font-size: 11px;
+      padding: 3px 8px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .details{ white-space: pre-wrap; overflow-wrap:anywhere; word-break:break-word; }
+
+    .note-red{
+      color:#b42318;
+      font-weight:700;
+      margin-bottom:3px;
+    }
+
+    tr { page-break-inside: avoid; }
+    table.report { page-break-inside: auto; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="page-title">Отчёт проверки</div>
+
+    <div class="page-meta">
+      {% if data.metadata and data.metadata.timestamp %}
+        Загружен: {{ data.metadata.timestamp }}
+      {% endif %}
+    </div>
+
+    <!-- ДАННЫЕ ОТЧЁТА -->
+    <div class="section">
+      <div class="section-title">Данные отчёта</div>
+
+      <table class="kv" aria-label="Данные отчёта">
+        <tbody>
+          <tr>
+            <td class="k">Авторы</td>
+            <td class="v">
+              <ul class="authors-list">
+                {% for s in data.info.students %}
+                  <li>{{ s }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="k">Тема</td>
+            <td class="v">{{ data.info.theme }}</td>
+          </tr>
+
+          <tr>
+            <td class="k">Статус подписей</td>
+            <td class="v">
+              {% if data.signs_verification.signs_status_code %}
+                <span class="pill pill--success">Присутствуют</span>
+              {% else %}
+                <span class="pill pill--danger">Отсутствуют</span>
+              {% endif %}
+            </td>
+          </tr>
+
+          <tr>
+            <td class="k">Итоговая оценка</td>
+            <td class="v">
+              <div class="score-line">
+                <span class="score-big">
+                  {{ "%.2f"|format(data.summary.average_score) }}
+                  <span class="muted">баллов</span>
+                </span>
+                &nbsp;
+                {% if data.summary.status %}
+                  <span class="pill pill--success">Зачёт</span>
+                {% else %}
+                  <span class="pill pill--danger">Незачёт</span>
+                {% endif %}
+              </div>
+
+              <div class="subline">
+                Соответствие: {{ "%.1f"|format(data.summary.compliance_percentage) }}%
+                · Проанализировано пунктов: {{ data.summary.total_points_analyzed }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ОЦЕНКА СТРУКТУРЫ -->
+    <div class="section">
+      <div class="section-title">Оценка структуры</div>
+
+      <table class="report report--structure" aria-label="Оценка структуры">
+        <thead>
+          <tr>
+            <th class="col-title">Раздел</th>
+            <th class="col-score">Оценка</th>
+            <th class="col-note">Пояснение</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in STRUCTURE %}
+            {% set ev = EVAL_BY_SECTION.get(s.key) %}
+            {% set not_found = (ev is none) or (ev.found == 0) %}
+            <tr>
+              <td class="col-title">{{ s.title }}</td>
+              <td class="col-score">
+                <span class="score">{% if not_found %}0{% else %}{{ ev.score }}{% endif %} / 10</span>
+              </td>
+              <td class="col-note">
+                {% if not_found %}
+                  <div class="note-red">Раздел не найден</div>
+                {% else %}
+                  <div class="details">{{ ev.details }}</div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- СООТВЕТСТВИЕ ЗАДАНИЮ -->
+    <div class="section">
+      <div class="section-title">Соответствие заданию</div>
+
+      <table class="report" aria-label="Соответствие заданию">
+        <thead>
+          <tr>
+            <th class="col-title">Пункт задания</th>
+            <th class="col-score">Оценка</th>
+            <th class="col-note">Пояснение</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in data.analysis %}
+            <tr>
+              <td class="col-title">{{ t.task_point }}</td>
+              <td class="col-score"><span class="score">{{ t.score }} / 10</span></td>
+              <td class="col-note"><div class="details">{{ t.justification }}</div></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>
